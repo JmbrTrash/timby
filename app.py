@@ -64,7 +64,7 @@ def startNewSession( user, project = None):
     print(user, seconds, seconds, 0, project)
     try:
         db = db()
-        c = db().cursor()
+        c = db.cursor()
         sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(%s,%s,%s,%s,%s)"
         c.execute(sqlcmd, (user, seconds, seconds, 0, project))
         
@@ -75,7 +75,7 @@ def updateRunningSession( session):
         print("Updateing entry{}".format(session[0]))
         try:
             db = db()
-            c = db().cursor()
+            c = db.cursor()
             sqlcmd = "UPDATE time_entries SET begintime=%s, lasttime=%s, totaltime=%s, user=%s, project=%s where ID=%s"
             c.execute(sqlcmd, ( session[0], session[1], session[2], session[3], session[4], session[5]))
         except Exception as e:
@@ -84,7 +84,7 @@ def updateRunningSession( session):
 def getRunningSession( user):
     try:
         db = db()
-        c = db().cursor()
+        c = db.cursor()
         limit = time.time() - time_limit
         print("limit {}".format(limit))
         cur.execute("SELECT * FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user,limit))
@@ -120,7 +120,7 @@ def init():
     # create tables
     try:
         db = db()
-        c = db().cursor()
+        c = db.cursor()
         c.execute(sql_create_time_entries)
         c.execute(sql_chat_ids)
     except Exception as e:
@@ -139,7 +139,7 @@ def start(update, context):
         context.bot.send_message(chat_id=update.effective_chat.id, text="Your name is {}".format(username))
         try:
             db = db()
-            c = db().cursor()
+            c = db.cursor()
             sqlcmd = "INSERT INTO chatids(user,chat_id) VALUES(%s,%s)"
             c.execute(sqlcmd, (username, update.effective_chat.id))
             
@@ -185,7 +185,7 @@ def session(update, context):
         context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=sessiontime)), session[4]))
 
 def get_chat_id(user):
-    cur = db().cursor()
+    cur = db.cursor()
     cur.execute("SELECT chat_id FROM chatids WHERE user=%s", (user,))
     obj = cur.fetchone()
     if obj is None:
@@ -200,7 +200,7 @@ def time_entries():
     FROM time_entries;'''
 
     db = db()
-    c = db().cursor()
+    c = db.cursor()
     cur.execute(time_entries_query, )
     entries = cur.fetchall()
     results = []
@@ -222,7 +222,7 @@ def time_entries_by_week():
     GROUP BY week;
     '''
     db = db()
-    c = db().cursor()
+    c = db.cursor()
     cur.execute(time_entries_by_week_query, )
     entries = cur.fetchall()
     results = []
@@ -244,7 +244,7 @@ def time_entries_by_week_for_user(user):
     GROUP BY week;
     ''' 
     db = db()
-    c = db().cursor()
+    c = db.cursor()
     cur.execute(time_entries_by_week_query, (user, ) )
     entries = cur.fetchall()
     results = []
