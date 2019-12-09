@@ -40,7 +40,7 @@ def hello():
     session = getRunningSession( user)
     totaltime = "just now"
     if session is None:
-        print("creating new entry")
+        print("creating new entry for user {}", user)
         startNewSession( user)
     else:
 
@@ -59,9 +59,7 @@ def hello():
     return "User {} is having an active session since {}".format(user, totaltime)
 
 def startNewSession( user, project = None):
-   
     seconds = time.time()
-    print(user, seconds, seconds, 0, project)
     try:
         db = getdb()
         c = db.cursor()
@@ -72,7 +70,7 @@ def startNewSession( user, project = None):
         print(e)
     
 def updateRunningSession( session):
-        print("Updateing entry{}".format(session[0]))
+        print("Updateing entry {}".format(session[0]))
         try:
             db = getdb()
             c = db.cursor()
@@ -86,7 +84,6 @@ def getRunningSession( user):
         db = getdb()
         c = db.cursor()
         limit = time.time() - time_limit
-        print("limit {}".format(limit))
         c.execute("SELECT * FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user,limit))
         tupl = c.fetchone()
         session_arr = []
@@ -176,23 +173,33 @@ def project(update, context):
 def session(update, context):
     username = update.message.chat.username
     #args = update.message.text.split()
-    now = time.time()
-    if username is not None:
-        session = getRunningSession( username)
-        if session is None:
-             context.bot.send_message(chat_id=update.effective_chat.id, text="You have no active session")
-        sessiontime = now - session[0]
-        context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=sessiontime)), session[4]))
+
+    try:
+        now = time.time()
+        if username is not None:
+            session = getRunningSession( username)
+            if session is None:
+                context.bot.send_message(chat_id=update.effective_chat.id, text="You have no active session")
+                return
+            
+            lasttime = session[1]
+            workedTime = session[2] + (now - lasttime) #update totaltime
+
+        
+        context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=workedTime)), session[4]))
+
+    except Exception as e:
+        print(e)
 
 def take_break(update, context):
+    print("break handler")
     username = update.message.chat.username
     session = getRunningSession(username)
     args = update.message.text.split()
-    
-    if len(args) == 1:
-        session[2] = session[2] - (args[0]*60) #substract breaktime
+    if len(args) == 2:
+        session[2] = session[2] - (int(args[1])*60) #substract breaktime
         updateRunningSession(session)
-        context.bot.send_message(chat_id=update.effective_chat.id, text="A break of {} minutes has been substracted from your worktime".format(args[0]))
+        context.bot.send_message(chat_id=update.effective_chat.id, text="A break of {} minutes has been substracted from your worktime".format(args[1]))
 
 def get_chat_id(user):
     db = getdb()
