@@ -271,7 +271,7 @@ def time_entries_by_week_for_user(user):
         row['user'] = entry[0]
         row['start'] = str(entry[1].utcnow())
         row['week'] = entry[2]
-        row['totaltime'] = entry[3].total_seconds()
+        row['totaltime'] = str(entry[3])
         results.append(row)
     return json.dumps(results)
 
