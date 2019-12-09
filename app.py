@@ -185,9 +185,10 @@ def session(update, context):
         context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=sessiontime)), session[4]))
 
 def get_chat_id(user):
-    cur = db.cursor()
-    cur.execute("SELECT chat_id FROM chatids WHERE user=%s", (user,))
-    obj = cur.fetchone()
+    db = getdb()
+    c = db.cursor()
+    c.execute("SELECT chat_id FROM chatids WHERE user=%s", (user,))
+    obj = c.fetchone()
     if obj is None:
         return None
     return obj[0]
@@ -201,8 +202,8 @@ def time_entries():
 
     db = getdb()
     c = db.cursor()
-    cur.execute(time_entries_query, )
-    entries = cur.fetchall()
+    c.execute(time_entries_query, )
+    entries = c.fetchall()
     results = []
     for entry in entries:
         row = {}
@@ -223,8 +224,8 @@ def time_entries_by_week():
     '''
     db = getdb()
     c = db.cursor()
-    cur.execute(time_entries_by_week_query, )
-    entries = cur.fetchall()
+    c.execute(time_entries_by_week_query, )
+    entries = c.fetchall()
     results = []
     for entry in entries:
         row = {}
@@ -245,8 +246,8 @@ def time_entries_by_week_for_user(user):
     ''' 
     db = getdb()
     c = db.cursor()
-    cur.execute(time_entries_by_week_query, (user, ) )
-    entries = cur.fetchall()
+    c.execute(time_entries_by_week_query, (user, ) )
+    entries = c.fetchall()
     results = []
     for entry in entries:
         row = {}
