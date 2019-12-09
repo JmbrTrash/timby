@@ -12,17 +12,18 @@ import timby_config as timby_config
 
 import mysql.connector
 
-mydb = mysql.connector.connect(
-  host="localhost",
-  user="root",
-  passwd="jimber",
-  database="timby"
-)
-mydb.autocommit = True
 
 def db():
-    global mydb
+    mydb = mysql.connector.connect(
+    host="localhost",
+    user="root",
+    passwd="jimber",
+    database="timby"
+    )
+    mydb.autocommit = True
+
     return mydb
+
 app = Flask(__name__)
 API_TOKEN = timby_config.API_TOKEN
 conn = {}
@@ -62,6 +63,7 @@ def startNewSession( user, project = None):
     seconds = time.time()
     print(user, seconds, seconds, 0, project)
     try:
+        db = db()
         c = db().cursor()
         sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(%s,%s,%s,%s,%s)"
         c.execute(sqlcmd, (user, seconds, seconds, 0, project))
@@ -72,6 +74,7 @@ def startNewSession( user, project = None):
 def updateRunningSession( session):
         print("Updateing entry{}".format(session[0]))
         try:
+            db = db()
             c = db().cursor()
             sqlcmd = "UPDATE time_entries SET begintime=%s, lasttime=%s, totaltime=%s, user=%s, project=%s where ID=%s"
             c.execute(sqlcmd, ( session[0], session[1], session[2], session[3], session[4], session[5]))
@@ -80,7 +83,8 @@ def updateRunningSession( session):
     
 def getRunningSession( user):
     try:
-        cur = db().cursor()
+        db = db()
+        c = db().cursor()
         limit = time.time() - time_limit
         print("limit {}".format(limit))
         cur.execute("SELECT * FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user,limit))
@@ -115,6 +119,7 @@ def init():
 
     # create tables
     try:
+        db = db()
         c = db().cursor()
         c.execute(sql_create_time_entries)
         c.execute(sql_chat_ids)
@@ -124,7 +129,7 @@ def init():
 @app.before_request
 def before_request():
     print("BEFORE !!!! ")
-    init()
+    #init()
 
 
 def start(update, context):
@@ -133,6 +138,7 @@ def start(update, context):
     if username is not None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Your name is {}".format(username))
         try:
+            db = db()
             c = db().cursor()
             sqlcmd = "INSERT INTO chatids(user,chat_id) VALUES(%s,%s)"
             c.execute(sqlcmd, (username, update.effective_chat.id))
@@ -193,7 +199,8 @@ def time_entries():
     project as Project 
     FROM time_entries;'''
 
-    cur = db().cursor()
+    db = db()
+    c = db().cursor()
     cur.execute(time_entries_query, )
     entries = cur.fetchall()
     results = []
@@ -214,7 +221,8 @@ def time_entries_by_week():
     FROM time_entries 
     GROUP BY week;
     '''
-    cur = db().cursor()
+    db = db()
+    c = db().cursor()
     cur.execute(time_entries_by_week_query, )
     entries = cur.fetchall()
     results = []
@@ -235,7 +243,8 @@ def time_entries_by_week_for_user(user):
     WHERE USER=%s
     GROUP BY week;
     ''' 
-    cur = db().cursor()
+    db = db()
+    c = db().cursor()
     cur.execute(time_entries_by_week_query, (user, ) )
     entries = cur.fetchall()
     results = []
@@ -265,4 +274,3 @@ if __name__ == '__main__':
     print("thread for bot started, now starting rest api")
     init()
     app.run(host='0.0.0.0')
-
