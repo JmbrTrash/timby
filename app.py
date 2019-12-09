@@ -2,13 +2,26 @@ from flask import Flask
 from flask import request
 import json
 import time
-import sqlite3
+
 import threading
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 import telegram
 import datetime
 import timby_config as timby_config
+
+import mysql.connector
+
+mydb = mysql.connector.connect(
+  host="localhost",
+  user="root",
+  passwd="jimber",
+  database="timby"
+)
+
+def db():
+    global mydb
+    return mydb
 app = Flask(__name__)
 API_TOKEN = timby_config.API_TOKEN
 conn = {}
@@ -17,16 +30,16 @@ bot = telegram.Bot(token=API_TOKEN)
 
 @app.route('/report', methods=['GET'])
 def hello():
-    global conn
+
     #data = json.loads(request.data)
     seconds = time.time()
     user = request.args.get('user')
 
-    session = getRunningSession(conn, user)
+    session = getRunningSession( user)
     totaltime = "just now"
     if session is None:
         print("creating new entry")
-        startNewSession(conn, user)
+        startNewSession( user)
     else:
 
         lasttime=session[1]
@@ -39,36 +52,36 @@ def hello():
             if chat_id is not None:
                 bot.send_message(chat_id=chat_id, text="You are working without active project, please set project using /project { projectname }")
             
-        updateRunningSession(conn, session)
+        updateRunningSession(session)
         
     return "User {} is having an active session since {}".format(user, totaltime)
 
-def startNewSession(dbcon, user, project = None):
+def startNewSession( user, project = None):
+   
     seconds = time.time()
+    print(user, seconds, seconds, 0, project)
     try:
-        c = dbcon.cursor()
-        sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(?,?,?,?,?)"
+        c = db().cursor()
+        sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(%s,%s,%s,%s,%s)"
         c.execute(sqlcmd, (user, seconds, seconds, 0, project))
-        dbcon.commit()
     except Exception as e:
         print(e)
     
-def updateRunningSession(dbcon, session):
+def updateRunningSession( session):
         print("Updateing entry{}".format(session[0]))
         try:
-            c = dbcon.cursor()
-            sqlcmd = "UPDATE time_entries SET begintime=?, lasttime=?, totaltime=?, user=?, project=? where ID=?"
+            c = db().cursor()
+            sqlcmd = "UPDATE time_entries SET begintime=%s, lasttime=%s, totaltime=%s, user=%s, project=%s where ID=%s"
             c.execute(sqlcmd, ( session[0], session[1], session[2], session[3], session[4], session[5]))
-            dbcon.commit()
         except Exception as e:
             print(e)
     
-def getRunningSession(dbcon, user):
+def getRunningSession( user):
     try:
-        cur = dbcon.cursor()
+        cur = db().cursor()
         limit = time.time() - time_limit
         print("limit {}".format(limit))
-        cur.execute("SELECT * FROM time_entries WHERE user=? and lasttime > ? order by lasttime desc", (user,limit))
+        cur.execute("SELECT * FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user,limit))
         tupl = cur.fetchone()
         session_arr = []
         if tupl is None:
@@ -80,35 +93,8 @@ def getRunningSession(dbcon, user):
 
 
 
-def create_connection(db_file):
-    """ create a database connection to the SQLite database
-        specified by db_file
-    :param db_file: database file
-    :return: Connection object or None
-    """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Exception as e:
-        print(e)
-    return conn
-
-def create_table(conn, create_table_sql):
-    """ create a table from the create_table_sql statement
-    :param conn: Connection object
-    :param create_table_sql: a CREATE TABLE statement
-    :return:
-    """
-    try:
-        c = conn.cursor()
-        c.execute(create_table_sql)
-    except Exception as e:
-        print(e)
-        
+       
 def init():
-    global conn
-    database = r"timelogging.db"
  
     sql_create_time_entries = """ CREATE TABLE IF NOT EXISTS time_entries (
                                         begintime integer NOT NULL,
@@ -125,38 +111,30 @@ def init():
                                     ); """
     # create a database connection
 
-
-    conn = create_connection(database)
- 
     # create tables
-    if conn is not None:
-        # create projects table
-        create_table(conn, sql_create_time_entries)
-        create_table(conn, sql_chat_ids)
-    else:
-        print("Error! cannot create the database connection.")
+    try:
+        c = db().cursor()
+        c.execute(sql_create_time_entries)
+        c.execute(sql_chat_ids)
+    except Exception as e:
+        print(e)
 
 @app.before_request
 def before_request():
     print("BEFORE !!!! ")
     init()
 
-def bot_db():
-    database = r"timelogging.db"
-    conn2 = create_connection(database)
-    return conn2
 
 def start(update, context):
-    db_con = bot_db()
     username = update.message.chat.username
     print(username)
     if username is not None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Your name is {}".format(username))
         try:
-            c = db_con.cursor()
-            sqlcmd = "INSERT INTO chatids(user,chat_id) VALUES(?,?)"
+            c = db().cursor()
+            sqlcmd = "INSERT INTO chatids(user,chat_id) VALUES(%s,%s)"
             c.execute(sqlcmd, (username, update.effective_chat.id))
-            db_con.commit()
+            
         except Exception as e:
             print(e)
     else:
@@ -167,8 +145,7 @@ def project(update, context):
     args = update.message.text.split()
     if username is not None:
         
-        db_con = bot_db()
-        session = getRunningSession(db_con, username)
+        session = getRunningSession( username)
         
         if session is None:
             context.bot.send_message(chat_id=update.effective_chat.id, text="You are not working at the moment")
@@ -179,11 +156,11 @@ def project(update, context):
         if session[4] == None:
             new_project = update.message.text.split()[1]
             session[4] = new_project
-            updateRunningSession(db_con, session)
+            updateRunningSession( session)
             context.bot.send_message(chat_id=update.effective_chat.id, text="Project set to {}!".format(new_project))
         else:
             new_project = update.message.text.split()[1]
-            startNewSession(db_con, username, new_project)
+            startNewSession( username, new_project)
             context.bot.send_message(chat_id=update.effective_chat.id, text="Started a new session with project set to {}!".format(new_project))
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="You really need a username dude...")
@@ -191,17 +168,17 @@ def project(update, context):
 def session(update, context):
     username = update.message.chat.username
     #args = update.message.text.split()
+    now = time.time()
     if username is not None:
-        db_con = bot_db()
-        session = getRunningSession(db_con, username)
+        session = getRunningSession( username)
         if session is None:
              context.bot.send_message(chat_id=update.effective_chat.id, text="You have no active session")
-        context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=session[2])), session[4]))
+        sessiontime = now - session[0]
+        context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=sessiontime)), session[4]))
 
 def get_chat_id(user):
-    global conn
-    cur = conn.cursor()
-    cur.execute("SELECT chat_id FROM chatids WHERE user=?", (user,))
+    cur = db().cursor()
+    cur.execute("SELECT chat_id FROM chatids WHERE user=%s", (user,))
     obj = cur.fetchone()
     if obj is None:
         return None
