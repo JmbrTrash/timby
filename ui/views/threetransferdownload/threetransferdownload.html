@@ -1,0 +1,50 @@
+<section class="threetransferdownload">
+  <v-row class="my-3 mx-1">
+    <v-card class="flexcard" style="width: 100%; height: 100%">
+      <v-card-title primary-title class="primary py-3 white--text">
+        <v-row>
+          <v-col cols="6" class="py-0">
+            <v-icon small color="white" left>fas fa-server</v-icon>
+            Threetransfer
+          </v-col>
+          <v-col></v-col>
+          <v-col cols="4" class="py-0">
+            </v-text-field>
+          </v-col>
+        </v-row>
+      </v-card-title>
+      <v-img class="align-left" style="width: 100%; height: auto" src="https://threefold.io/assets/home_banner_new.jpg">
+        <v-card-text>
+          <v-row>
+            <v-card class="mx-auto" style="min-height: 400px; height: 80%; width: 400px">
+              <v-card-title>
+                Download File
+              </v-card-title>
+              </v-card-actions class='ma-3  text-center' style="width: 100%">
+              <div class="text-center pa-5">
+                <div v-if="downloadMessage.code == 'DOWNLOADING'">
+                  <v-progress-circular indeterminate class="mr-3" color="primary"></v-progress-circular>
+                  {{downloadMessage.message}}
+                </div>
+                <div v-if="downloadMessage.code == 'ERROR'">
+                  <v-icon color="red" medium left>fas fa-times</v-icon>{{downloadMessage.message}}<br><br><br>
+                  <v-btn text icon large color="black" class=" ml-2" @click="reloadPage()">
+                    <v-icon>fa-redo-alt</v-icon>
+                  </v-btn>
+                </div>
+                <div v-if="downloadMessage.code == 'SUCCESS'">
+                  <v-icon color="green" medium left>fas fa-check</v-icon>{{downloadMessage.message}}
+                </div>
+              </div>
+              </v-card-actions>
+            </v-card>
+          </v-row>
+
+
+        </v-card-text>
+      </v-img>
+    </v-card>
+    </v-flex>
+  </v-row>
+  
+</section>

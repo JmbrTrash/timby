@@ -1,0 +1,46 @@
+<!-- File Drop Zone https://codepen.io/kristof-van-stappen/pen/MWWxezW -->
+
+<section class="threetransfer">
+  <div style="visibility:hidden; opacity:0" id="dropzone">
+
+    <div id="textnode">
+      <v-icon large color="white" left>fas fa-file-upload</v-icon> Drop files to add data.
+    </div>
+  </div>
+  <v-row class="my-3 mx-1">
+    <v-card class="flexcard" style="width: 100%; height: 100%">
+      <v-card-title primary-title class="primary py-3 white--text">
+        <v-row>
+          <v-col cols="6" class="py-0">
+            <v-icon small color="white" left>fas fa-server</v-icon>
+            Timby
+          </v-col>
+          <v-col></v-col>
+          <v-col cols="4" class="py-0">
+            </v-text-field>
+          </v-col>
+        </v-row>
+      </v-card-title>
+      <v-img class="align-auto" style="width: 100%;" src="https://threefold.io/assets/home_banner_new.jpg">
+
+        <v-card-text class="fill-height fill-width">
+          <v-row>
+            <v-data-table
+            :headers="headers"
+            :items="time_entries"
+            :items-per-page="100"
+            class="elevation-1"
+          ></v-data-table>
+
+
+          </v-row>
+        </v-card-text>
+      </v-img>
+
+
+    </v-card>
+
+  </v-row>
+ 
+    <script type="application/javascript" src="./packages/vue-clipboard.min.js" async></script>
+</section>

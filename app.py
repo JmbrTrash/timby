@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, send_from_directory
 from flask import request
 import json
 import time
@@ -11,6 +11,7 @@ import datetime
 import timby_config as timby_config
 
 import mysql.connector
+
 
 
 def getdb():
@@ -29,6 +30,10 @@ API_TOKEN = timby_config.API_TOKEN
 conn = {}
 time_limit = 60*5
 bot = telegram.Bot(token=API_TOKEN)
+
+@app.route('/<path:path>')
+def ui(path):
+    return send_from_directory('ui', path)
 
 @app.route('/report', methods=['GET'])
 def hello():
@@ -227,7 +232,7 @@ def time_entries():
         row['user'] = entry[0]
         row['start'] = str(entry[1].utcnow())
         row['week'] = entry[2]
-        row['totaltime'] = entry[3].total_seconds()
+        row['totaltime'] = str(entry[3])
         row['project'] = entry[4]
         results.append(row)
     return json.dumps(results)
@@ -237,7 +242,7 @@ def time_entries_by_week():
     time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
     sec_to_time(sum(totaltime)) as Duration 
     FROM time_entries 
-    GROUP BY week;
+    GROUP BY user, week;
     '''
     db = getdb()
     c = db.cursor()
@@ -249,7 +254,7 @@ def time_entries_by_week():
         row['user'] = entry[0]
         row['start'] = str(entry[1].utcnow())
         row['week'] = entry[2]
-        row['totaltime'] = entry[3].total_seconds()
+        row['totaltime'] = str(entry[3])
         results.append(row)
     return json.dumps(results)
 

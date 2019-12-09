@@ -1,0 +1,19 @@
+// [
+//     {
+//         "path": "/",
+//         "component": "views/threetransfer",
+//         "name": "",
+//         "meta": {
+//             "icon": "fas fa-exchange"
+//         }
+//     },
+//     {
+//         "path": "/downloads",
+//         "component": "views/threetransferdownload",
+//         "name": "",
+//         "props": true,
+//         "meta": {
+//             "icon": "fas fa-exchange"
+//         }
+//     }
+// ]
