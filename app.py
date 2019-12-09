@@ -264,5 +264,5 @@ if __name__ == '__main__':
     threadBot.start()
     print("thread for bot started, now starting rest api")
     init()
-    app.run()
+    app.run(host='0.0.0.0')
 
