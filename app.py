@@ -13,7 +13,7 @@ import timby_config as timby_config
 import mysql.connector
 
 
-def db():
+def getdb():
     mydb = mysql.connector.connect(
     host="localhost",
     user="root",
@@ -63,7 +63,7 @@ def startNewSession( user, project = None):
     seconds = time.time()
     print(user, seconds, seconds, 0, project)
     try:
-        db = db()
+        db = getdb()
         c = db.cursor()
         sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(%s,%s,%s,%s,%s)"
         c.execute(sqlcmd, (user, seconds, seconds, 0, project))
@@ -74,7 +74,7 @@ def startNewSession( user, project = None):
 def updateRunningSession( session):
         print("Updateing entry{}".format(session[0]))
         try:
-            db = db()
+            db = getdb()
             c = db.cursor()
             sqlcmd = "UPDATE time_entries SET begintime=%s, lasttime=%s, totaltime=%s, user=%s, project=%s where ID=%s"
             c.execute(sqlcmd, ( session[0], session[1], session[2], session[3], session[4], session[5]))
@@ -83,12 +83,12 @@ def updateRunningSession( session):
     
 def getRunningSession( user):
     try:
-        db = db()
+        db = getdb()
         c = db.cursor()
         limit = time.time() - time_limit
         print("limit {}".format(limit))
-        cur.execute("SELECT * FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user,limit))
-        tupl = cur.fetchone()
+        c.execute("SELECT * FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user,limit))
+        tupl = c.fetchone()
         session_arr = []
         if tupl is None:
             return None
@@ -119,7 +119,7 @@ def init():
 
     # create tables
     try:
-        db = db()
+        db = getdb()
         c = db.cursor()
         c.execute(sql_create_time_entries)
         c.execute(sql_chat_ids)
@@ -138,7 +138,7 @@ def start(update, context):
     if username is not None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Your name is {}".format(username))
         try:
-            db = db()
+            db = getdb()
             c = db.cursor()
             sqlcmd = "INSERT INTO chatids(user,chat_id) VALUES(%s,%s)"
             c.execute(sqlcmd, (username, update.effective_chat.id))
@@ -199,7 +199,7 @@ def time_entries():
     project as Project 
     FROM time_entries;'''
 
-    db = db()
+    db = getdb()
     c = db.cursor()
     cur.execute(time_entries_query, )
     entries = cur.fetchall()
@@ -221,7 +221,7 @@ def time_entries_by_week():
     FROM time_entries 
     GROUP BY week;
     '''
-    db = db()
+    db = getdb()
     c = db.cursor()
     cur.execute(time_entries_by_week_query, )
     entries = cur.fetchall()
@@ -243,7 +243,7 @@ def time_entries_by_week_for_user(user):
     WHERE USER=%s
     GROUP BY week;
     ''' 
-    db = db()
+    db = getdb()
     c = db.cursor()
     cur.execute(time_entries_by_week_query, (user, ) )
     entries = cur.fetchall()
