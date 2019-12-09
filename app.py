@@ -18,6 +18,7 @@ mydb = mysql.connector.connect(
   passwd="jimber",
   database="timby"
 )
+mydb.autocommit = True
 
 def db():
     global mydb
@@ -64,6 +65,7 @@ def startNewSession( user, project = None):
         c = db().cursor()
         sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(%s,%s,%s,%s,%s)"
         c.execute(sqlcmd, (user, seconds, seconds, 0, project))
+        
     except Exception as e:
         print(e)
     
@@ -102,7 +104,7 @@ def init():
                                         totaltime integer NOT NULL,
                                         user text,
                                         project text,
-                                        ID INTEGER PRIMARY KEY
+                                        ID INTEGER PRIMARY KEY AUTO_INCREMENT
                                     ); """
 
     sql_chat_ids = """ CREATE TABLE IF NOT EXISTS chatids (
@@ -183,6 +185,68 @@ def get_chat_id(user):
     if obj is None:
         return None
     return obj[0]
+
+@app.route('/time_entries', methods=['GET'])
+def time_entries():
+    time_entries_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
+    sec_to_time(totaltime) as Duration,
+    project as Project 
+    FROM time_entries;'''
+
+    cur = db().cursor()
+    cur.execute(time_entries_query, )
+    entries = cur.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        row['user'] = entry[0]
+        row['start'] = str(entry[1].utcnow())
+        row['week'] = entry[2]
+        row['totaltime'] = entry[3].total_seconds()
+        row['project'] = entry[4]
+        results.append(row)
+    return json.dumps(results)
+
+@app.route('/time_entries_week', methods=['GET'])
+def time_entries_by_week():
+    time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
+    sec_to_time(sum(totaltime)) as Duration 
+    FROM time_entries 
+    GROUP BY week;
+    '''
+    cur = db().cursor()
+    cur.execute(time_entries_by_week_query, )
+    entries = cur.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        row['user'] = entry[0]
+        row['start'] = str(entry[1].utcnow())
+        row['week'] = entry[2]
+        row['totaltime'] = entry[3].total_seconds()
+        results.append(row)
+    return json.dumps(results)
+
+@app.route('/time_entries_week_user/<user>', methods=['GET'])
+def time_entries_by_week_for_user(user):
+    time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
+    sec_to_time(sum(totaltime)) as Duration 
+    FROM time_entries
+    WHERE USER=%s
+    GROUP BY week;
+    ''' 
+    cur = db().cursor()
+    cur.execute(time_entries_by_week_query, (user, ) )
+    entries = cur.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        row['user'] = entry[0]
+        row['start'] = str(entry[1].utcnow())
+        row['week'] = entry[2]
+        row['totaltime'] = entry[3].total_seconds()
+        results.append(row)
+    return json.dumps(results)
 
 if __name__ == '__main__':
     updater = Updater(token=API_TOKEN, use_context=True)
