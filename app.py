@@ -184,6 +184,16 @@ def session(update, context):
         sessiontime = now - session[0]
         context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=sessiontime)), session[4]))
 
+def take_break(update, context):
+    username = update.message.chat.username
+    session = getRunningSession(username)
+    args = update.message.text.split()
+    
+    if len(args) == 1:
+        session[2] = session[2] - (args[0]*60) #substract breaktime
+        updateRunningSession(session)
+        context.bot.send_message(chat_id=update.effective_chat.id, text="A break of {} minutes has been substracted from your worktime".format(args[0]))
+
 def get_chat_id(user):
     db = getdb()
     c = db.cursor()
@@ -270,6 +280,9 @@ if __name__ == '__main__':
     session_handler = CommandHandler('session', session)
     dispatcher.add_handler(session_handler)
 
+    take_breakhandler = CommandHandler('break', take_break)
+    dispatcher.add_handler(take_breakhandler)
+    
     threadBot = threading.Thread(target = updater.start_polling)
     threadBot.start()
     print("thread for bot started, now starting rest api")
