@@ -275,6 +275,29 @@ def time_entries_by_week_for_user(user):
         results.append(row)
     return json.dumps(results)
 
+@app.route('/time_entries_week_user_project/<user>', methods=['GET'])
+def time_entries_by_week_for_user(user):
+    time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
+    sec_to_time(sum(totaltime)) as Duration, project as Project
+    FROM time_entries
+    WHERE USER=%s
+    GROUP BY week, project;
+    ''' 
+    db = getdb()
+    c = db.cursor()
+    c.execute(time_entries_by_week_query, (user, ) )
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        row['user'] = entry[0]
+        row['start'] = str(entry[1].utcnow())
+        row['week'] = entry[2]
+        row['totaltime'] = str(entry[3])
+        row['project'] = entry[4]
+        results.append(row)
+    return json.dumps(results)
+
 if __name__ == '__main__':
     updater = Updater(token=API_TOKEN, use_context=True)
     dispatcher = updater.dispatcher
