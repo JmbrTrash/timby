@@ -99,6 +99,21 @@ def getRunningSession( user):
     except Exception as e:
         print("cannot get running session for user {} exception {}".format(user, e))
 
+def getAllRunningSessions():
+    try:
+        db = getdb()
+        c = db.cursor()
+        limit = time.time() - time_limit
+        c.execute("SELECT user FROM time_entries WHERE lasttime > %s GROUP BY user desc", (limit, ))
+        tupl = c.fetchall()
+        active_users = []
+        if tupl is None:
+            return []
+        for entry in tupl:
+            active_users.extend(entry)
+        return active_users
+    except Exception as e:
+        print("cannot get running session for users exception {}".format(e))
 
 
        
@@ -197,7 +212,6 @@ def session(update, context):
         print(e)
 
 def take_break(update, context):
-    print("break handler")
     username = update.message.chat.username
     session = getRunningSession(username)
     args = update.message.text.split()
@@ -205,6 +219,17 @@ def take_break(update, context):
         session[2] = session[2] - (int(args[1])*60) #substract breaktime
         updateRunningSession(session)
         context.bot.send_message(chat_id=update.effective_chat.id, text="A break of {} minutes has been substracted from your worktime".format(args[1]))
+
+
+def listUsers(update, context):
+    #username = update.message.chat.username
+    runningSessions = getAllRunningSessions()
+    print(runningSessions)
+    activeUsersString = '\n'.join(runningSessions)
+    print(activeUsersString)
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Active users: \n {}".format(activeUsersString))
+
+
 
 def get_chat_id(user):
     db = getdb()
@@ -230,7 +255,7 @@ def time_entries():
     for entry in entries:
         row = {}
         row['user'] = entry[0]
-        row['start'] = str(entry[1].utcnow())
+        row['start'] = str(entry[1])
         row['week'] = entry[2]
         row['totaltime'] = str(entry[3])
         row['project'] = entry[4]
@@ -252,7 +277,7 @@ def time_entries_by_week():
     for entry in entries:
         row = {}
         row['user'] = entry[0]
-        row['start'] = str(entry[1].utcnow())
+        row['start'] = str(entry[1])
         row['week'] = entry[2]
         row['totaltime'] = str(entry[3])
         results.append(row)
@@ -274,7 +299,7 @@ def time_entries_by_week_for_user(user):
     for entry in entries:
         row = {}
         row['user'] = entry[0]
-        row['start'] = str(entry[1].utcnow())
+        row['start'] = str(entry[1])
         row['week'] = entry[2]
         row['totaltime'] = str(entry[3])
         results.append(row)
@@ -296,7 +321,7 @@ def time_entries_by_week_for_user_project(user):
     for entry in entries:
         row = {}
         row['user'] = entry[0]
-        row['start'] = str(entry[1].utcnow())
+        row['start'] = str(entry[1])
         row['week'] = entry[2]
         row['totaltime'] = str(entry[3])
         row['project'] = entry[4]
@@ -318,6 +343,9 @@ if __name__ == '__main__':
     take_breakhandler = CommandHandler('break', take_break)
     dispatcher.add_handler(take_breakhandler)
     
+    list_usershandler = CommandHandler('users', listUsers)
+    dispatcher.add_handler(list_usershandler)
+
     threadBot = threading.Thread(target = updater.start_polling)
     threadBot.start()
     print("thread for bot started, now starting rest api")
