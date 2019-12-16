@@ -44,9 +44,17 @@ def hello():
 
     session = getRunningSession( user)
     totaltime = "just now"
+    sessionType = "Unknown"
+    print(request.remote_addr)
+    if "192.168.2." in str(request.remote_addr):
+        sessionType = "Local"
+        print("Local session!")
+    if '192.168.3.' in str(request.remote_addr):
+        sessionType = "VPN"
+
     if session is None:
         print("creating new entry for user {}", user)
-        startNewSession( user)
+        startNewSession( user, None, sessionType)
     else:
 
         lasttime=session[1]
@@ -63,13 +71,13 @@ def hello():
         
     return "User {} is having an active session since {}".format(user, totaltime)
 
-def startNewSession( user, project = None):
+def startNewSession( user, project = None, sessionType=None):
     seconds = time.time()
     try:
         db = getdb()
         c = db.cursor()
-        sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project) VALUES(%s,%s,%s,%s,%s)"
-        c.execute(sqlcmd, (user, seconds, seconds, 0, project))
+        sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project, type) VALUES(%s,%s,%s,%s,%s,%s)"
+        c.execute(sqlcmd, (user, seconds, seconds, 0, project, sessionType))
         
     except Exception as e:
         print(e)
@@ -116,6 +124,37 @@ def getAllRunningSessions():
         print("cannot get running session for users exception {}".format(e))
 
 
+def showHelp(update, context):
+    text = """Usage: 
+/start [Tell the bot who you are / initiate]
+/session [Session overview]
+/s
+/project {projectname} [Set your project]
+/p
+/manual {projectname} {time} [Add manual time entry]
+/m"""
+    context.bot.send_message(chat_id=update.effective_chat.id, text=text)
+
+def addManualSession(update, context):
+    username = update.message.chat.username
+    args = update.message.text.split()
+
+    if len(args) == 3:
+        duration = int(args[2]) * 60 #given in minutes, converted to secs
+        project = args[1]
+        now = time.time()
+        beginTime = now - duration
+        print("Creating manual entry, {} {}".format(beginTime, duration))
+        try:
+            db = getdb()
+            c = db.cursor()
+            sqlcmd = "INSERT INTO time_entries(user, begintime, lasttime, totaltime, project, type) VALUES(%s,%s,%s,%s,%s,%s)"
+            c.execute(sqlcmd, (username, beginTime, 0, duration, project, 'Manual'))
+            context.bot.send_message(chat_id=update.effective_chat.id, text="A manual entry has been created on project {} with a duration of {} minutes".format(project, int(args[2])))
+            return
+        except Exception as e:
+            print(e)
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Usage: /manual {project} {time}")
        
 def init():
  
@@ -132,6 +171,9 @@ def init():
                                         user TEXT NOT NULL,
                                         chat_id TEXT NOT NULL
                                     ); """
+    
+    sql_adjust1 = """ ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS type VARCHAR(255); """
+
     # create a database connection
 
     # create tables
@@ -140,6 +182,8 @@ def init():
         c = db.cursor()
         c.execute(sql_create_time_entries)
         c.execute(sql_chat_ids)
+        c.execute(sql_adjust1)
+
     except Exception as e:
         print(e)
 
@@ -227,7 +271,7 @@ def listUsers(update, context):
     print(runningSessions)
     activeUsersString = '\n'.join(runningSessions)
     print(activeUsersString)
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Active users: \n {}".format(activeUsersString))
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Active users: \n{}".format(activeUsersString))
 
 
 
@@ -337,17 +381,39 @@ if __name__ == '__main__':
     project_handler = CommandHandler('project', project)
     dispatcher.add_handler(project_handler)
   
+    project_handler = CommandHandler('p', project)
+    dispatcher.add_handler(project_handler)
+
     session_handler = CommandHandler('session', session)
+    dispatcher.add_handler(session_handler)
+
+    session_handler = CommandHandler('s', session)
     dispatcher.add_handler(session_handler)
 
     take_breakhandler = CommandHandler('break', take_break)
     dispatcher.add_handler(take_breakhandler)
     
+
+    addManual_handler = CommandHandler('manual', addManualSession)
+    dispatcher.add_handler(addManual_handler)
+
+    addManual_handler = CommandHandler('m', addManualSession)
+    dispatcher.add_handler(addManual_handler)
+
     list_usershandler = CommandHandler('users', listUsers)
     dispatcher.add_handler(list_usershandler)
+
+    help_handler = CommandHandler('help', showHelp)
+    dispatcher.add_handler(help_handler)
+
+    help_handler = CommandHandler('h', showHelp)
+    dispatcher.add_handler(help_handler)
+    
 
     threadBot = threading.Thread(target = updater.start_polling)
     threadBot.start()
     print("thread for bot started, now starting rest api")
     init()
     app.run(host='0.0.0.0')
+
+
