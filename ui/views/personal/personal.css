@@ -1,4 +1,3 @@
-
 .threetransfer {
     height: 100%;
 }
@@ -23,8 +22,4 @@ div#textnode {
     text-align: center;
     vertical-align: middle;
     transition: font-size 175ms;
-}
-::backdrop
-{
-    background-color: white;
 }

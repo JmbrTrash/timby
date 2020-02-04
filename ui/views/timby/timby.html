@@ -1,46 +1,89 @@
-<!-- File Drop Zone https://codepen.io/kristof-van-stappen/pen/MWWxezW -->
+<div id="app">
+  <v-app id="inspire">
+    <v-navigation-drawer
+      v-model="drawer"
+      app
+    >
+      <v-list dense>
+        <v-list-item @click="goToDash()">
+          <v-list-item-action>
+            <v-icon>dashboard</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Dashboard</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+        <v-list-item @click="goToPersonal()">
+          <v-list-item-action>
+            <v-icon>face</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Personal</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
 
-<section class="threetransfer">
-  <div style="visibility:hidden; opacity:0" id="dropzone">
+    <v-app-bar
+      app
+      color="#003180"
+      dark
+    >
+      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
+      <v-toolbar-title> Timby</v-toolbar-title>
+      <img style="height: 50px; width: auto; margin-left: auto;" src="https://www.jimber.org/img/logoLight.svg">
+    </v-app-bar>
 
-    <div id="textnode">
-      <v-icon large color="white" left>fas fa-file-upload</v-icon> Drop files to add data.
-    </div>
-  </div>
-  <v-row class="my-3 mx-1">
-    <v-card class="flexcard" style="width: 100%; height: 100%">
-      <v-card-title primary-title class="primary py-3 white--text">
-        <v-row>
-          <v-col cols="6" class="py-0">
-            <v-icon small color="white" left>fas fa-server</v-icon>
-            Timby
-          </v-col>
-          <v-col></v-col>
-          <v-col cols="4" class="py-0">
-            </v-text-field>
-          </v-col>
-        </v-row>
-      </v-card-title>
-      <v-img class="align-auto" style="width: 100%;" src="https://threefold.io/assets/home_banner_new.jpg">
-
-        <v-card-text class="fill-height fill-width">
-          <v-row>
-            <v-data-table
-            :headers="headers"
-            :items="time_entries"
-            :items-per-page="100"
-            class="elevation-1"
-          ></v-data-table>
-
-
-          </v-row>
-        </v-card-text>
-      </v-img>
-
-
-    </v-card>
-
-  </v-row>
+    <v-content id='content'>
+      
+  
+      <v-card-title>Hours per week: </v-card-title>
+      
+      <v-select
+      :items="['2019','2020']"
+      label="Year"
+      style="margin: 20px;"
+      outlined
+      @input="setSelected"
+    ></v-select>
+   
  
-    <script type="application/javascript" src="./packages/vue-clipboard.min.js" async></script>
-</section>
+      <v-expansion-panels
+        popout
+        hover
+        tile
+      >
+        <v-expansion-panel
+          v-for="(item,i) in weeks"
+          :key="i"
+      
+        >
+          <v-expansion-panel-header @click="clicked(item[0])">Week {{item[0]}}</v-expansion-panel-header>
+      
+          <v-expansion-panel-content id='jipla'>
+            <v-data-table
+      :headers="headers"
+      :sort-by="'time'"
+      :sort-desc="true"
+      :items="dataPerWeek"
+      :items-per-page="5"
+      class="elevation-1"
+    >
+  
+  </v-data-table>
+          </v-expansion-panel-content>
+        </v-expansion-panel>
+      </v-expansion-panels>
+   
+    
+    </v-content>
+    
+
+    <v-footer
+      color="#003180"
+      app
+    >
+      <span class="white--text">&copy; Jimber 2020</span>
+    </v-footer>
+  </v-app>
+</div>
