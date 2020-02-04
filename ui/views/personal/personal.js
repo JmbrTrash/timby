@@ -5,34 +5,21 @@ module.exports = {
   props: [],
   data () {
     return {
-    weeks:[],
     drawer: null,
     items: [],
-    dataPerWeek: [],
     user: "",
-    selected:"this",
     dialog: false,
-    VPN: 0,
-    Manual: 0,
-    Local: 0,
+    VPN: "",
+    Manual: "",
+    Local: "",
     week: 0,
-    expanded: [],
-    currentyear: 0,
-    singleExpand: false,
-    show: false,
-    headers: [
-      {
-        text: 'User',
-        align: 'left',
-        sortable: false,
-        value: 'user',
-      },
-      { text: 'Hours worked this week', value: 'time' },
-     
-    ],
-    
+   headers: [ 
+     { text: 'Week', value: 'week' },
+        { text: 'Time worked', value: 'totaltime' }
+       
+   ],
    time_entries: []
-  }
+    }
   },
   computed: {
     ...window.vuex.mapGetters([
@@ -48,11 +35,10 @@ module.exports = {
     }
   },
   mounted () {
-    axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries`)
+    axios.get(`http://${window.location.hostname}:${window.location.port}/users`)
     .then(response => {this.items = response.data; 
+      console.log(response)
     })
-
-    
 
     console.log("router",)
 switch(this.$route.query.view){
@@ -86,15 +72,36 @@ switch(this.$route.query.view){
 
   },
   methods: {
-    setSelected(year) {
-      this.currentyear = year;
-      axios.get(`http://${window.location.hostname}:${window.location.port}/getWeeks/${year}`)
-    .then(response => {this.weeks = response.data; 
-      console.log(this.weeks)
-    })
+    setSelected(jipla) {
+      this.getUserData(jipla[0]);
     },
     handleClick(value){
       this.week = value.week
+      console.log(value)
+      axios.get(`http://${window.location.hostname}:${window.location.port}/getTypes/${value.user}/${value.week}`)
+      .then(response => {
+        if(response.data.VPN != undefined)
+        {
+          this.VPN = response.data.VPN + ' uren';
+        }
+        else{
+          this.VPN = "Geen geregistreerde uren!"
+        }
+        if(response.data.Manual != undefined)
+        {
+          this.Manual = response.data.Manual + ' uren';
+        }
+        else{
+          this.Manual = "Geen geregistreerde uren!"
+        }
+        if(response.data.Local != undefined)
+        {
+          this.Local = response.data.Local + ' uren';
+        }
+        else{
+          this.Local = "Geen geregistreerde uren!"
+        }
+      })
       this.dialog = true;
     },
     getUserData(user){
@@ -107,31 +114,6 @@ switch(this.$route.query.view){
     },
     goToDash(){
       this.$router.push(`dashboard`)
-    },
-    clicked(value){
-      year = this.currentyear
-      console.log(year)
-      axios.get(`http://${window.location.hostname}:${window.location.port}/getDataWeek/${value}/${year}`)
-          .then(response => {
-            this.dataPerWeek = response.data; 
-            console.log(this.show)
-          })
-    },
-    fullscreen(){
-      var elem = document.getElementById('jipla');
-
-        if(elem.requestFullscreen){
-            elem.requestFullscreen();
-        }
-        else if(elem.mozRequestFullScreen){
-            elem.mozRequestFullScreen();
-        }
-        else if(elem.webkitRequestFullscreen){
-            elem.webkitRequestFullscreen();
-        }
-        else if(elem.msRequestFullscreen){
-            elem.msRequestFullscreen();
-        }
     }
     // ...window.vuex.mapActions([
 

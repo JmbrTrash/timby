@@ -12,13 +12,15 @@ import timby_config as timby_config
 
 import mysql.connector
 
-
+import mimetypes
+mimetypes.add_type('text/css', '.css')
+mimetypes.add_type('text/javascript', '.js')
 
 def getdb():
     mydb = mysql.connector.connect(
     host="localhost",
     user="root",
-    passwd="jimber",
+    passwd="root",
     database="timby"
     )
     mydb.autocommit = True
@@ -51,6 +53,8 @@ def hello():
         print("Local session!")
     if '192.168.3.' in str(request.remote_addr):
         sessionType = "VPN"
+    if '127.0.0.1' in str(request.remote_addr):
+        sessionType = "Dev"
 
     if session is None:
         print("creating new entry for user {}", user)
@@ -229,7 +233,9 @@ def project(update, context):
             context.bot.send_message(chat_id=update.effective_chat.id, text="Project set to {}!".format(new_project))
         else:
             new_project = update.message.text.split()[1]
-            startNewSession( username, new_project)
+            print('booooooo')
+            print(session)
+            startNewSession( username, new_project, session[6])
             context.bot.send_message(chat_id=update.effective_chat.id, text="Started a new session with project set to {}!".format(new_project))
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="You really need a username dude...")
@@ -284,6 +290,72 @@ def get_chat_id(user):
         return None
     return obj[0]
 
+@app.route('/getWeeks/<year>', methods=['GET'])
+def getWeeks(year):
+    weeks_query = '''SELECT distinct(WEEK(from_unixtime(begintime))) as Week
+    FROM time_entries
+    where YEAR(from_unixtime(begintime)) = %s
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(weeks_query, (year, ))
+    entries = c.fetchall()
+    return json.dumps(entries)
+
+@app.route('/getDataWeek/<week>/<year>', methods=['GET'])
+def getDataWeek(week, year):
+    dataweeks_query = '''SELECT user as User, sum(totaltime)
+    FROM time_entries
+    where YEAR(from_unixtime(begintime)) = %s and WEEK(from_unixtime(begintime)) = %s
+    group by user
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(dataweeks_query, (year, week, ))
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        hours = entry[1] / 3600
+        minutes = (entry[1] / 60) % 60
+        time = ("%d Uren, %02d Minuten" % (hours, minutes))
+
+        row['user'] = entry[0]
+        row['time'] = time
+        results.append(row)
+        print(entry)
+    return json.dumps(results)
+
+@app.route('/users', methods=['GET'])
+def getUsers():
+    userquery = 'SELECT DISTINCT(user) FROM chatids'
+
+    db = getdb()
+    c = db.cursor()
+    c.execute(userquery)
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        results.append(entry)
+    return json.dumps(results)
+
+@app.route('/getTypes/<user>/<week>', methods=['GET'])
+def getTypes(user, week):
+    typesquery = '''SELECT sum(totaltime) as totaal, type from time_entries WHERE USER=%s and  WEEK(from_unixtime(begintime), '%h') = %s group by type;'''
+    db = getdb()
+    c = db.cursor()
+    c.execute(typesquery, (user, week))
+    entries = c.fetchall()
+    results = {}
+    for entry in entries:
+        hours = int(entry[0]/3600)
+        minutes = (entry[0] /60) % 60
+        time=("%d:%02d" % (hours, minutes))
+        print(time)
+        results[entry[1]]= time
+    print(results)
+    return json.dumps(results)
+
 @app.route('/time_entries', methods=['GET'])
 def time_entries():
     time_entries_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
@@ -330,10 +402,13 @@ def time_entries_by_week():
 @app.route('/time_entries_week_user/<user>', methods=['GET'])
 def time_entries_by_week_for_user(user):
     time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
-    sec_to_time(sum(totaltime)) as Duration 
+    sum(totaltime)
+     
+     as Duration 
     FROM time_entries
-    WHERE USER=%s
-    GROUP BY week;
+    WHERE USER=%s and YEAR(from_unixtime(begintime)) = YEAR(CURDATE())
+    GROUP BY week
+    order by week DESC ;
     ''' 
     db = getdb()
     c = db.cursor()
@@ -342,10 +417,16 @@ def time_entries_by_week_for_user(user):
     results = []
     for entry in entries:
         row = {}
+        hours = entry[3] / 3600
+        minutes = (entry[3] / 60) % 60
+        time = ("%d Uren, %02d Minuten" % (hours, minutes))
+
+        jipla = str(entry[1]).split(' ', 1 )
+
         row['user'] = entry[0]
-        row['start'] = str(entry[1])
+        row['start'] = jipla[1][:-3] + 'u ('+jipla[0]+')'
         row['week'] = entry[2]
-        row['totaltime'] = str(entry[3])
+        row['totaltime'] = str(time)
         results.append(row)
     return json.dumps(results)
 
