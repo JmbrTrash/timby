@@ -14,8 +14,9 @@ module.exports = {
     Local: "",
     week: 0,
    headers: [ 
-     { text: 'Week', value: 'week' },
-        { text: 'Time worked', value: 'totaltime' }
+    { text: 'Year', value: 'year'},
+     { text: 'Week', value: 'week'},
+        { text: 'Time worked', value: 'totaltime'}
        
    ],
    time_entries: []
@@ -40,40 +41,42 @@ module.exports = {
       console.log(response)
     })
 
-    console.log("router",)
-switch(this.$route.query.view){
-  case 'all':
-    console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
-      axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries`)
-      .then(response => {this.time_entries = response.data; 
-      })
-      break;
-  case 'week':
-    console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
-      axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
-      .then(response => {this.time_entries = response.data; 
-      })
-      break;
-  case 'week_project_user':
-    console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
-      user=this.$route.query.user
-      axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week_user_project/${user}`)
-      .then(response => {this.time_entries = response.data; 
-      })
-      break;
-  case 'week_user':
-    console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
-          user=this.$route.query.user
-          axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week_user/${user}`)
-          .then(response => {this.time_entries = response.data; 
-          })
-          break;
-}
+//     console.log("router",)
+// switch(this.$route.query.view){
+//   case 'all':
+//     console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
+//       axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries`)
+//       .then(response => {this.time_entries = response.data; 
+//       })
+//       break;
+//   case 'week':
+//     console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
+//       axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
+//       .then(response => {this.time_entries = response.data; 
+//       })
+//       break;
+//   case 'week_project_user':
+//     console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
+//       user=this.$route.query.user
+//       axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week_user_project/${user}`)
+//       .then(response => {this.time_entries = response.data; 
+//       })
+//       break;
+//   case 'week_user':
+//     console.log(`http://${window.location.hostname}:${window.location.port}/time_entries_week`)
+//           user=this.$route.query.user
+//           axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week_user/${user}`)
+//           .then(response => {this.time_entries = response.data; 
+//           })
+//           break;
+//}
 
   },
   methods: {
     setSelected(jipla) {
       this.getUserData(jipla[0]);
+      table = document.getElementById('table')
+      table.classList.remove("d-none");
     },
     handleClick(value){
       this.week = value.week
@@ -114,6 +117,9 @@ switch(this.$route.query.view){
     },
     goToDash(){
       this.$router.push(`dashboard`)
+    },
+    goToProject(){
+      this.$router.push(`projects`)
     }
     // ...window.vuex.mapActions([
 

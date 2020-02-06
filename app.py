@@ -295,10 +295,24 @@ def getWeeks(year):
     weeks_query = '''SELECT distinct(WEEK(from_unixtime(begintime))) as Week
     FROM time_entries
     where YEAR(from_unixtime(begintime)) = %s
+    order by Week desc
     '''
     db = getdb()
     c = db.cursor()
     c.execute(weeks_query, (year, ))
+    entries = c.fetchall()
+    return json.dumps(entries)
+
+@app.route('/getWeeksPerProject/<project>', methods=['GET'])
+def getWeeksPerProject(project):
+    weeks_query = '''SELECT distinct(WEEK(from_unixtime(begintime))) as Week, YEAR(from_unixtime(begintime)) as Year
+    FROM time_entries
+    where project = %s
+     order by Year desc, Week desc
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(weeks_query, (project, ))
     entries = c.fetchall()
     return json.dumps(entries)
 
@@ -318,12 +332,36 @@ def getDataWeek(week, year):
         row = {}
         hours = entry[1] / 3600
         minutes = (entry[1] / 60) % 60
-        time = ("%d Uren, %02d Minuten" % (hours, minutes))
+        time = ("%d Hours, %02d Minutes" % (hours, minutes))
 
         row['user'] = entry[0]
         row['time'] = time
         results.append(row)
         print(entry)
+    return json.dumps(results)
+
+@app.route('/getDataWeekPerProject/<project>/<week>/<year>', methods=['GET'])
+def getDataWeekPerProject(project, week, year):
+    dataweeks_query = '''SELECT user as User, sum(totaltime) as Totaltime
+    FROM time_entries
+    where YEAR(from_unixtime(begintime)) = %s and WEEK(from_unixtime(begintime)) = %s and project = %s
+    group by user
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(dataweeks_query, (year, week, project, ))
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        hours = entry[1] / 3600
+        minutes = (entry[1] / 60) % 60
+        time = ("%d Hours, %02d Minutes" % (hours, minutes))
+        print(time)
+        row['user'] = entry[0]
+        row['time'] = time
+        results.append(row)
+        print(row)
     return json.dumps(results)
 
 @app.route('/users', methods=['GET'])
@@ -338,6 +376,18 @@ def getUsers():
     for entry in entries:
         results.append(entry)
     return json.dumps(results)
+
+@app.route('/projects', methods=['GET'])
+def getProjects():
+    userquery = 'SELECT DISTINCT(project) FROM time_entries'
+
+    db = getdb()
+    c = db.cursor()
+    c.execute(userquery)
+    entries = c.fetchall()
+    return json.dumps(entries)
+
+
 
 @app.route('/getTypes/<user>/<week>', methods=['GET'])
 def getTypes(user, week):
@@ -399,16 +449,66 @@ def time_entries_by_week():
         results.append(row)
     return json.dumps(results)
 
+
+@app.route('/getProjectData/<project>', methods=['GET'])
+def getProjectData(project):
+    time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
+    ROUND(sum(totaltime),4) as Duration, project as Name
+    FROM time_entries
+    WHERE project=%s
+    GROUP BY week, user
+    order by week DESC ;
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(time_entries_by_week_query, (project,))
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        hours = entry[3] / 3600
+        minutes = (entry[3] / 60) % 60
+        time = ("%d,%02d" % (hours, minutes))
+        print(time)
+        jipla = str(entry[1]).split(' ', 1)
+
+        row['user'] = entry[0]
+        row['year'] = jipla[0][0:4]
+        row['start'] = jipla[1][:-3] + 'u (' + jipla[0] + ')'
+        row['week'] = entry[2]
+        row['totaltime'] = str(time)
+        results.append(row)
+    return json.dumps(results)
+
+@app.route('/getTotalTimesProject/<project>', methods=['GET'])
+def getTotalTimesProject(project):
+    time_entries_by_week_query = '''SELECT sum(totaltime) as total, user from time_entries where project = %s group by user
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(time_entries_by_week_query, (project,))
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        hours = entry[0] / 3600
+        minutes = (entry[0] / 60) % 60
+        time = ("%d Hours, %02d Minutes" % (hours, minutes))
+        row['user'] = entry[1]
+        row['time'] = time
+        results.append(row)
+    return json.dumps(results)
+
 @app.route('/time_entries_week_user/<user>', methods=['GET'])
 def time_entries_by_week_for_user(user):
     time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
-    sum(totaltime)
+    sum(totaltime)as Duration , YEAR(from_unixtime(begintime)) as Year
      
-     as Duration 
+     
     FROM time_entries
-    WHERE USER=%s and YEAR(from_unixtime(begintime)) = YEAR(CURDATE())
+    WHERE USER=%s
     GROUP BY week
-    order by week DESC ;
+    order by Year desc, Week desc;
     ''' 
     db = getdb()
     c = db.cursor()
@@ -419,7 +519,7 @@ def time_entries_by_week_for_user(user):
         row = {}
         hours = entry[3] / 3600
         minutes = (entry[3] / 60) % 60
-        time = ("%d Uren, %02d Minuten" % (hours, minutes))
+        time = ("%d Hours, %02d Minutes" % (hours, minutes))
 
         jipla = str(entry[1]).split(' ', 1 )
 
@@ -427,7 +527,9 @@ def time_entries_by_week_for_user(user):
         row['start'] = jipla[1][:-3] + 'u ('+jipla[0]+')'
         row['week'] = entry[2]
         row['totaltime'] = str(time)
+        row['year'] = entry[4]
         results.append(row)
+    print(results)
     return json.dumps(results)
 
 @app.route('/time_entries_week_user_project/<user>', methods=['GET'])
