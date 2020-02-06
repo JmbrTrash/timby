@@ -5,7 +5,7 @@
       app
     >
       <v-list dense>
-        <v-list-item @click="goToDash()">
+        <v-list-item @click="goToDash">
           <v-list-item-action>
             <v-icon>dashboard</v-icon>
           </v-list-item-action>
@@ -21,6 +21,14 @@
             <v-list-item-title>Personal</v-list-item-title>
           </v-list-item-content>
         </v-list-item>
+        <v-list-item @click="goToProject">
+          <v-list-item-action>
+            <v-icon>folder</v-icon>
+          </v-list-item-action>
+          <v-list-item-content>
+            <v-list-item-title>Projects</v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -34,28 +42,29 @@
       <img style="height: 50px; width: auto; margin-left: auto;" src="https://www.jimber.org/img/logoLight.svg">
     </v-app-bar>
 
+
+
     <v-content>
-      <v-card class="mx-auto"
-      max-height="99%"
-      max-width="99%"
-      raised>
+      
       <v-card-title>Choose user:</v-card-title>
       <v-select
-      :value="$store.myValue" 
       @input="setSelected"
       :items="items"
-      label="Select"
-      solo
+      style="margin: 20px;"
+      outlined
+      label="User"
     >
   </v-select>
+      
 
     <v-data-table
     :headers="headers"
     :items="time_entries"
-    :items-per-page="100" 
-    class="elevation-1"
+    :items-per-page="500" 
+    id="table"
+    class="elevation-1 d-none"
     @click:row="handleClick"
-    expand
+    hide-default-footer
   >
 </v-data-table>
   
@@ -96,7 +105,6 @@
             Close
           </v-btn>
         </v-card-actions>
-      </v-card>
     </v-dialog>
 
 

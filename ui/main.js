@@ -29,6 +29,11 @@ document.addEventListener('DOMContentLoaded', (event) => {
       path: '/dashboard',
       component: httpVueLoader('./views/timby/index.vue'),
       name: 'dashboard',
+    },
+    {
+      path: '/projects',
+      component: httpVueLoader('./views/projects/projects.vue'),
+      name: 'projects',
     }
   ]
   })
