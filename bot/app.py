@@ -16,22 +16,22 @@ import mimetypes
 mimetypes.add_type('text/css', '.css')
 mimetypes.add_type('text/javascript', '.js')
 
-def getdb():
-    mydb = mysql.connector.connect(
-    host="localhost",
-    user="root",
-    passwd="root",
-    database="timby"
-    )
-    mydb.autocommit = True
-
-    return mydb
-
 app = Flask(__name__)
 API_TOKEN = timby_config.API_TOKEN
 conn = {}
 time_limit = 60*5
 bot = telegram.Bot(token=API_TOKEN)
+
+def getdb():
+    mydb = mysql.connector.connect(
+    host=timby_config.MYSQL_HOST,
+    user=timby_config.MYSQL_USER,
+    passwd=timby_config.MYSQL_PASSWORD,
+    database=timby_config.MYSQL_DATABASE
+    )
+    mydb.autocommit = True
+
+    return mydb
 
 @app.route('/<path:path>')
 def ui(path):
