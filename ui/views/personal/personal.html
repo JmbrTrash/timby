@@ -71,40 +71,63 @@
       </v-card>
       <v-dialog
       v-model="dialog"
-      width="500"
+      fullscreen hide-overlay transition="dialog-bottom-transition"
+      
     >
 
-
       <v-card>
-        <v-card-title
-          class="headline grey lighten-2"
-          primary-title
-        >
-         Hours from week {{week}} ({{ new Date().getFullYear() }})
-        </v-card-title>
-        <br>
-        <v-card-text>
-          <b>VPN: </b>{{VPN}}
-        </v-card-text>
-        <v-card-text>
-          <b>Manual: </b>{{Manual}}
-        </v-card-text>
-        <v-card-text>
-          <b>Local: </b>{{Local}}
-        </v-card-text>
-
-        <v-divider></v-divider>
-
-        <v-card-actions>
-          <v-spacer></v-spacer>
-          <v-btn
-            color="primary"
-            text
-            @click="dialog = false"
-          >
-            Close
+        <v-toolbar dark color="#003180">
+          <v-btn style="margin: 0px 20px;" icon color="error" dark @click="dialog = false">
+           Close
           </v-btn>
-        </v-card-actions>
+          <v-toolbar-title>Entries from week {{week}} ({{ new Date().getFullYear() }})</v-toolbar-title>
+          <v-spacer></v-spacer>
+        </v-toolbar>
+        
+    
+
+  <v-list >
+    <v-list-item >
+      <v-list-item-content >
+        <v-list-item-title ><b>Time Started</b></v-list-item-title >
+      </v-list-item-content >
+      <v-list-item-content style="text-align: center;">
+        <v-list-item-title><b>Time Stopped</b></v-list-item-title>
+      </v-list-item-content>
+      <v-list-item-content style="text-align: center;">
+        <v-list-item-title><b>Total Time</b></v-list-item-title>
+      </v-list-item-content>
+      <v-list-item-content style="text-align: center;">
+        <v-list-item-title><b>Project</b></v-list-item-title>
+      </v-list-item-content>
+      <v-list-item-avatar>
+        <v-icon></v-icon>
+       </v-list-item-avatar>
+    </v-list-item>
+    <v-list-item
+      v-for="item in entriesWeek"
+      :key="item.totaltime"
+    >
+    <v-list-item-content>
+      <v-list-item-title v-text="item.start"></v-list-item-title>
+    </v-list-item-content>
+    <v-list-item-content style="text-align: center;">
+      <v-list-item-title v-text="item.stopped"></v-list-item-title>
+    </v-list-item-content>
+    <v-list-item-content style="text-align: center;">
+      <v-list-item-title v-text="item.totaltime"></v-list-item-title>
+    </v-list-item-content>
+      <v-list-item-content style="text-align: center;">
+        <v-list-item-title v-text="item.project"></v-list-item-title>
+      </v-list-item-content>
+
+      <v-list-item-avatar color="error" @click="deleteEntry(item.id)" >
+       <v-icon>clear</v-icon>
+      </v-list-item-avatar>
+    </v-list-item>
+  </v-list>
+</v-card>
+        
     </v-dialog>
 
 

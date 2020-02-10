@@ -449,6 +449,38 @@ def time_entries_by_week():
         results.append(row)
     return json.dumps(results)
 
+@app.route('/allEntriesWeekUser/<week>/<user>', methods=['GET'])
+def allEntriesWeekUser(week, user):
+    time_entries_by_week_query = '''SELECT 
+    from_unixtime(begintime) as Start, 
+    sec_to_time(totaltime) as Duration,
+    project as Project, 
+    DAYNAME(from_unixtime(begintime)) as Daynamestarted, 
+    from_unixtime(lasttime) as Stop, 
+    DAYNAME(from_unixtime(lasttime)) as Daynamestopped,
+     begintime as id
+    FROM time_entries where WEEK(from_unixtime(begintime)) = %s and user=%s;
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(time_entries_by_week_query, (week, user, ))
+    entries = c.fetchall()
+    results = []
+    for entry in entries:
+        row = {}
+        date = str(entry[0]).split(' ', 1)
+        datestop = str(entry[4]).split(' ', 1)
+        print(date)
+        dayname = entry[3]
+        print(dayname)
+        row['id'] = entry[6]
+        row['start'] = entry[3] +' ('+ date[1][:-3] + 'u)'
+        row['stopped'] = entry[5] + ' (' + datestop[1][:-3] + 'u)'
+        row['totaltime'] = str(entry[1])[:-3] + ' Hours'
+        row['project'] = str(entry[2])
+        results.append(row)
+    return json.dumps(results)
+
 
 @app.route('/getProjectData/<project>', methods=['GET'])
 def getProjectData(project):
@@ -494,13 +526,25 @@ def getTotalTimesProject(project):
         hours = entry[0] / 3600
         minutes = (entry[0] / 60) % 60
         time = ("%d Hours, %02d Minutes" % (hours, minutes))
+
         row['user'] = entry[1]
-        row['time'] = time
+        row['time'] = str(time)
         results.append(row)
     return json.dumps(results)
 
+
+@app.route('/deleteEntry/<begintime>', methods=['DELETE'])
+def deleteEntry(begintime):
+    time_entries_by_week_query = '''DELETE FROM time_entries WHERE begintime=%s;
+    '''
+    db = getdb()
+    c = db.cursor()
+    c.execute(time_entries_by_week_query, (begintime,))
+    return 'succes!'
+
 @app.route('/time_entries_week_user/<user>', methods=['GET'])
 def time_entries_by_week_for_user(user):
+    print('hier')
     time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
     sum(totaltime)as Duration , YEAR(from_unixtime(begintime)) as Year
      
