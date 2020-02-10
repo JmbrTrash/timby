@@ -23,3 +23,6 @@ div#textnode {
     vertical-align: middle;
     transition: font-size 175ms;
 }
+.header{
+    color: pink;
+}

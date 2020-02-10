@@ -135,6 +135,5 @@ module.exports = {
       minutes2020 =minutes2020%60
       this.totalTime2020 = hours2020 + 'u '+ minutes2020+'min'
     },
-    
   }
 }

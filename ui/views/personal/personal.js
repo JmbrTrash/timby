@@ -7,6 +7,7 @@ module.exports = {
     return {
     drawer: null,
     items: [],
+    entriesWeek:[],
     user: "",
     dialog: false,
     VPN: "",
@@ -16,6 +17,12 @@ module.exports = {
    headers: [ 
     { text: 'Year', value: 'year'},
      { text: 'Week', value: 'week'},
+        { text: 'Time worked', value: 'totaltime'}
+       
+   ],
+   headersEntries: [ 
+    { text: 'Project', value: 'project'},
+     { text: 'Start', value: 'start'},
         { text: 'Time worked', value: 'totaltime'}
        
    ],
@@ -73,6 +80,14 @@ module.exports = {
 
   },
   methods: {
+
+    getEntries(){
+      axios.get(`http://${window.location.hostname}:${window.location.port}/allEntriesWeekUser/${this.week}/${this.user}`)
+      .then(response => {
+        this.entriesWeek = response.data;
+      })
+    },
+
     setSelected(jipla) {
       this.getUserData(jipla[0]);
       table = document.getElementById('table')
@@ -81,30 +96,33 @@ module.exports = {
     handleClick(value){
       this.week = value.week
       console.log(value)
-      axios.get(`http://${window.location.hostname}:${window.location.port}/getTypes/${value.user}/${value.week}`)
-      .then(response => {
-        if(response.data.VPN != undefined)
-        {
-          this.VPN = response.data.VPN + ' uren';
-        }
-        else{
-          this.VPN = "Geen geregistreerde uren!"
-        }
-        if(response.data.Manual != undefined)
-        {
-          this.Manual = response.data.Manual + ' uren';
-        }
-        else{
-          this.Manual = "Geen geregistreerde uren!"
-        }
-        if(response.data.Local != undefined)
-        {
-          this.Local = response.data.Local + ' uren';
-        }
-        else{
-          this.Local = "Geen geregistreerde uren!"
-        }
-      })
+      this.user = value.user
+      // axios.get(`http://${window.location.hostname}:${window.location.port}/getTypes/${value.user}/${value.week}`)
+      // .then(response => {
+      //   if(response.data.VPN != undefined)
+      //   {
+      //     this.VPN = response.data.VPN + ' uren';
+      //   }
+      //   else{
+      //     this.VPN = "Geen geregistreerde uren!"
+      //   }
+      //   if(response.data.Manual != undefined)
+      //   {
+      //     this.Manual = response.data.Manual + ' uren';
+      //   }
+      //   else{
+      //     this.Manual = "Geen geregistreerde uren!"
+      //   }
+      //   if(response.data.Local != undefined)
+      //   {
+      //     this.Local = response.data.Local + ' uren';
+      //   }
+      //   else{
+      //     this.Local = "Geen geregistreerde uren!"
+      //   }
+      // })
+      this.getEntries();
+
       this.dialog = true;
     },
     getUserData(user){
@@ -120,11 +138,19 @@ module.exports = {
     },
     goToProject(){
       this.$router.push(`projects`)
-    }
+    },
     // ...window.vuex.mapActions([
 
     // ]),
-  
+    async deleteEntry(value){
+      var r = confirm("Are you sure you want to delete this entry?");
+      if (r == true) {
+        await axios.delete(`http://${window.location.hostname}:${window.location.port}/deleteEntry/${value}`)
+        this.getEntries();
+      } else {
+       alert('Cancelled deletion!')
+      }
+    }
     
   }
 }
