@@ -24,10 +24,10 @@ bot = telegram.Bot(token=API_TOKEN)
 
 def getdb():
     mydb = mysql.connector.connect(
-    host=timby_config.MYSQL_HOST,
-    user=timby_config.MYSQL_USER,
-    passwd=timby_config.MYSQL_PASSWORD,
-    database=timby_config.MYSQL_DATABASE
+        host=timby_config.MYSQL_HOST,
+        user=timby_config.MYSQL_USER,
+        passwd=timby_config.MYSQL_PASSWORD,
+        database=timby_config.MYSQL_DATABASE
     )
     mydb.autocommit = True
 
@@ -35,7 +35,7 @@ def getdb():
 
 @app.route('/<path:path>')
 def ui(path):
-    return send_from_directory('ui', path)
+    return send_from_directory('../ui', path)
 
 @app.route('/report', methods=['GET'])
 def hello():
@@ -50,7 +50,6 @@ def hello():
     print(request.remote_addr)
     if "192.168.2." in str(request.remote_addr):
         sessionType = "Local"
-        print("Local session!")
     if '192.168.3.' in str(request.remote_addr):
         sessionType = "VPN"
     if '127.0.0.1' in str(request.remote_addr):
@@ -163,17 +162,17 @@ def addManualSession(update, context):
 def init():
  
     sql_create_time_entries = """ CREATE TABLE IF NOT EXISTS time_entries (
+                                        ID INTEGER PRIMARY KEY AUTO_INCREMENT
                                         begintime integer NOT NULL,
                                         lasttime integer NOT NULL,
                                         totaltime integer NOT NULL,
                                         user text,
-                                        project text,
-                                        ID INTEGER PRIMARY KEY AUTO_INCREMENT
+                                        project_id integer NOT NULL
                                     ); """
 
-    sql_chat_ids = """ CREATE TABLE IF NOT EXISTS chatids (
-                                        user TEXT NOT NULL,
-                                        chat_id TEXT NOT NULL
+    sql_chat_ids = """ CREATE TABLE IF NOT EXISTS chat (
+                                        id integer NOT NULL,
+                                        user TEXT NOT NULL
                                     ); """
     
     sql_adjust1 = """ ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS type VARCHAR(255); """
@@ -278,8 +277,6 @@ def listUsers(update, context):
     activeUsersString = '\n'.join(runningSessions)
     print(activeUsersString)
     context.bot.send_message(chat_id=update.effective_chat.id, text="Active users: \n{}".format(activeUsersString))
-
-
 
 def get_chat_id(user):
     db = getdb()
@@ -544,7 +541,6 @@ def deleteEntry(begintime):
 
 @app.route('/time_entries_week_user/<user>', methods=['GET'])
 def time_entries_by_week_for_user(user):
-    print('hier')
     time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
     sum(totaltime)as Duration , YEAR(from_unixtime(begintime)) as Year
      
