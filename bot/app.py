@@ -47,7 +47,6 @@ def hello():
     session = getRunningSession( user)
     totaltime = "just now"
     sessionType = "Unknown"
-    print(request.remote_addr)
     if "192.168.2." in str(request.remote_addr):
         sessionType = "Local"
     if '192.168.3.' in str(request.remote_addr):
@@ -147,7 +146,6 @@ def addManualSession(update, context):
         project = args[1]
         now = time.time()
         beginTime = now - duration
-        print("Creating manual entry, {} {}".format(beginTime, duration))
         try:
             db = getdb()
             c = db.cursor()
@@ -158,11 +156,68 @@ def addManualSession(update, context):
         except Exception as e:
             print(e)
     context.bot.send_message(chat_id=update.effective_chat.id, text="Usage: /manual {project} {time}")
-       
+
+def createProject(update, context):
+    username = update.message.chat.username
+    args = update.message.text.split()
+    projectName = args[1]
+
+    if (canManage(username) is False):
+        context.bot.send_message(chat_id=update.effective_chat.id, text="You don't have the rights to create a new project")
+        return
+
+    if (projectExists(projectName) is True):
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Project {} already exists!".format(projectName))
+        return
+
+    try:
+        db = getdb()
+        cursor = db.cursor()
+        insertProject = "INSERT INTO projects (name) VALUES(%s)"
+        cursor.execute(insertProject, (projectName,))
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Created new project: {projectName}")
+    except Exception as e:
+        print(e)
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Failed to create new project: {projectName}")
+        
+def listProjects(update, context):
+    currentProjects = convertCursorListToString(getProjectList())
+    if currentProjects is None:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No projects found!")
+    else:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Current projects: {}".format(currentProjects))
+
+def convertCursorListToString(itemList):
+    return ', '.join(str(item) for cursorList in itemList for item in cursorList)
+
+def canManage(userName):
+    try:
+        db = getdb()
+        cursor = db.cursor()
+        getUserRights = "SELECT canManage from chatids WHERE user=%s"
+        cursor.execute(getUserRights, (userName,))
+        canManage = cursor.fetchone()
+        return canManage[0] > 0
+    except Exception as e:
+        print(e)
+        return False
+
+def getProjectList():
+    try:
+        db = getdb()
+        cursor = db.cursor()
+        projectsSQL = "SELECT name FROM projects"
+        cursor.execute(projectsSQL)
+        projectList = cursor.fetchall()
+        return projectList
+    except Exception as e:
+        print(e)
+        return None
+
 def init():
  
     sql_create_time_entries = """ CREATE TABLE IF NOT EXISTS time_entries (
-                                        ID INTEGER PRIMARY KEY AUTO_INCREMENT
+                                        id INTEGER PRIMARY KEY AUTO_INCREMENT,
                                         begintime integer NOT NULL,
                                         lasttime integer NOT NULL,
                                         totaltime integer NOT NULL,
@@ -170,12 +225,20 @@ def init():
                                         project_id integer NOT NULL
                                     ); """
 
-    sql_chat_ids = """ CREATE TABLE IF NOT EXISTS chat (
-                                        id integer NOT NULL,
-                                        user TEXT NOT NULL
+    sql_chat_ids = """ CREATE TABLE IF NOT EXISTS chatids (
+                                        id integer PRIMARY KEY NOT NULL,
+                                        user TEXT NOT NULL,
+                                        canManage boolean default 0
+                                    ); """
+
+    sql_create_projects = """ CREATE TABLE IF NOT EXISTS projects (
+                                        id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                                        name varchar(45) NOT NULL
                                     ); """
     
     sql_adjust1 = """ ALTER TABLE time_entries ADD COLUMN IF NOT EXISTS type VARCHAR(255); """
+
+    adjustCanManage = """ ALTER TABLE chatids ADD COLUMN IF NOT EXISTS canManage boolean default 0; """
 
     # create a database connection
 
@@ -184,9 +247,10 @@ def init():
         db = getdb()
         c = db.cursor()
         c.execute(sql_create_time_entries)
+        c.execute(sql_create_projects)
         c.execute(sql_chat_ids)
         c.execute(sql_adjust1)
-
+        c.execute(adjustCanManage)
     except Exception as e:
         print(e)
 
@@ -198,14 +262,13 @@ def before_request():
 
 def start(update, context):
     username = update.message.chat.username
-    print(username)
     if username is not None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="Your name is {}".format(username))
         try:
             db = getdb()
             c = db.cursor()
-            sqlcmd = "INSERT INTO chatids(user,chat_id) VALUES(%s,%s)"
-            c.execute(sqlcmd, (username, update.effective_chat.id))
+            sqlcmd = "INSERT INTO chatids (id,user) VALUES(%(id)s,%(user)s) ON DUPLICATE KEY UPDATE user=%(user)s"
+            c.execute(sqlcmd, { 'id': update.effective_chat.id, 'user': username })
             
         except Exception as e:
             print(e)
@@ -218,6 +281,7 @@ def project(update, context):
     if username is not None:
         
         session = getRunningSession( username)
+        projectName = update.message.text.split()[1]
         
         if session is None:
             context.bot.send_message(chat_id=update.effective_chat.id, text="You are not working at the moment")
@@ -225,19 +289,31 @@ def project(update, context):
         if len(args) == 1:
             context.bot.send_message(chat_id=update.effective_chat.id, text="You are currently working on {}".format(session[4]))
             return
+        if (projectExists(projectName) is False):
+            projectList = convertCursorListToString(getProjectList())
+            context.bot.send_message(chat_id=update.effective_chat.id, text=("Project {} does not exists!" + "\n" + "Available projects: {}").format(projectName, projectList))
+            return
         if session[4] == None:
-            new_project = update.message.text.split()[1]
-            session[4] = new_project
+            session[4] = projectName
             updateRunningSession( session)
-            context.bot.send_message(chat_id=update.effective_chat.id, text="Project set to {}!".format(new_project))
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Project set to {}!".format(projectName))
         else:
-            new_project = update.message.text.split()[1]
-            print('booooooo')
-            print(session)
-            startNewSession( username, new_project, session[6])
-            context.bot.send_message(chat_id=update.effective_chat.id, text="Started a new session with project set to {}!".format(new_project))
+            startNewSession( username, projectName, session[6])
+            context.bot.send_message(chat_id=update.effective_chat.id, text="Started a new session with project set to {}!".format(projectName))
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="You really need a username dude...")
+
+def projectExists(projectName):
+    try:
+        db = getdb()
+        cursor = db.cursor()
+        sqlcmd = "SELECT * FROM projects WHERE name = %s"
+        cursor.execute(sqlcmd, (projectName,))
+        projects = cursor.fetchall()
+        return len(projects) > 0
+    except Exception as e:
+        print(e)
+    return False
 
 def session(update, context):
     username = update.message.chat.username
@@ -271,11 +347,8 @@ def take_break(update, context):
 
 
 def listUsers(update, context):
-    #username = update.message.chat.username
     runningSessions = getAllRunningSessions()
-    print(runningSessions)
     activeUsersString = '\n'.join(runningSessions)
-    print(activeUsersString)
     context.bot.send_message(chat_id=update.effective_chat.id, text="Active users: \n{}".format(activeUsersString))
 
 def get_chat_id(user):
@@ -334,7 +407,6 @@ def getDataWeek(week, year):
         row['user'] = entry[0]
         row['time'] = time
         results.append(row)
-        print(entry)
     return json.dumps(results)
 
 @app.route('/getDataWeekPerProject/<project>/<week>/<year>', methods=['GET'])
@@ -354,11 +426,9 @@ def getDataWeekPerProject(project, week, year):
         hours = entry[1] / 3600
         minutes = (entry[1] / 60) % 60
         time = ("%d Hours, %02d Minutes" % (hours, minutes))
-        print(time)
         row['user'] = entry[0]
         row['time'] = time
         results.append(row)
-        print(row)
     return json.dumps(results)
 
 @app.route('/users', methods=['GET'])
@@ -376,15 +446,8 @@ def getUsers():
 
 @app.route('/projects', methods=['GET'])
 def getProjects():
-    userquery = 'SELECT DISTINCT(project) FROM time_entries'
-
-    db = getdb()
-    c = db.cursor()
-    c.execute(userquery)
-    entries = c.fetchall()
-    return json.dumps(entries)
-
-
+    currentProjects = getProjectList()
+    return json.dumps(currentProjects)
 
 @app.route('/getTypes/<user>/<week>', methods=['GET'])
 def getTypes(user, week):
@@ -398,9 +461,7 @@ def getTypes(user, week):
         hours = int(entry[0]/3600)
         minutes = (entry[0] /60) % 60
         time=("%d:%02d" % (hours, minutes))
-        print(time)
         results[entry[1]]= time
-    print(results)
     return json.dumps(results)
 
 @app.route('/time_entries', methods=['GET'])
@@ -467,9 +528,7 @@ def allEntriesWeekUser(week, user):
         row = {}
         date = str(entry[0]).split(' ', 1)
         datestop = str(entry[4]).split(' ', 1)
-        print(date)
         dayname = entry[3]
-        print(dayname)
         row['id'] = entry[6]
         row['start'] = entry[3] +' ('+ date[1][:-3] + 'u)'
         row['stopped'] = entry[5] + ' (' + datestop[1][:-3] + 'u)'
@@ -498,7 +557,6 @@ def getProjectData(project):
         hours = entry[3] / 3600
         minutes = (entry[3] / 60) % 60
         time = ("%d,%02d" % (hours, minutes))
-        print(time)
         jipla = str(entry[1]).split(' ', 1)
 
         row['user'] = entry[0]
@@ -569,7 +627,6 @@ def time_entries_by_week_for_user(user):
         row['totaltime'] = str(time)
         row['year'] = entry[4]
         results.append(row)
-    print(results)
     return json.dumps(results)
 
 @app.route('/time_entries_week_user_project/<user>', methods=['GET'])
@@ -616,12 +673,17 @@ if __name__ == '__main__':
     take_breakhandler = CommandHandler('break', take_break)
     dispatcher.add_handler(take_breakhandler)
     
-
     addManual_handler = CommandHandler('manual', addManualSession)
     dispatcher.add_handler(addManual_handler)
 
     addManual_handler = CommandHandler('m', addManualSession)
     dispatcher.add_handler(addManual_handler)
+
+    projectList_handler = CommandHandler('list', listProjects)
+    dispatcher.add_handler(projectList_handler)
+
+    createProject_handler = CommandHandler('createproject', createProject)
+    dispatcher.add_handler(createProject_handler)
 
     list_usershandler = CommandHandler('users', listUsers)
     dispatcher.add_handler(list_usershandler)
