@@ -2,13 +2,13 @@ from flask import Flask, send_from_directory
 from flask import request
 import json
 import time
-import datetime
+from datetime import datetime
+from datetime import timedelta
 
 import threading
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 import telegram
-import datetime
 import timby_config as timby_config
 
 import mysql.connector
@@ -511,13 +511,14 @@ def time_entries_by_week():
 @app.route('/allEntriesWeekUser/<week>/<user>', methods=['GET'])
 def allEntriesWeekUser(week, user):
     time_entries_by_week_query = '''SELECT 
-    from_unixtime(begintime) as Start, 
+    begintime as Start,
+    lasttime as Stop,  
     sec_to_time(totaltime) as Duration,
-    project as Project, 
     DAYNAME(from_unixtime(begintime)) as Daynamestarted, 
-    from_unixtime(lasttime) as Stop, 
     DAYNAME(from_unixtime(lasttime)) as Daynamestopped,
-     begintime as id
+    project,
+    id,
+    type
     FROM time_entries where WEEK(from_unixtime(begintime)) = %s and user=%s;
     '''
     db = getdb()
@@ -527,16 +528,30 @@ def allEntriesWeekUser(week, user):
     results = []
     for entry in entries:
         row = {}
-        date = str(entry[0]).split(' ', 1)
-        datestop = str(entry[4]).split(' ', 1)
-        dayname = entry[3]
-        row['id'] = entry[6]
-        row['start'] = entry[3] +' ('+ date[1][:-3] + 'u)'
-        row['stopped'] = entry[5] + ' (' + datestop[1][:-3] + 'u)'
-        row['totaltime'] = str(entry[1])[:-3] + ' Hours'
-        row['project'] = str(entry[2])
+        startTime = datetime.fromtimestamp(entry[0])
+        endTime = datetime.fromtimestamp(entry[1])
+        timeDuration = time.strptime(str(entry[2]), '%H:%M:%S')
+        startDay = entry[3]
+        endDay = entry[4]
+        project = entry[5]
+        entryId = entry[6]
+        entryType = entry[7]
+        row['id'] = entryId
+        row['type'] = entryType
+        row['start'] = convertToTimeDict(startDay, startTime)
+        if entryType != 'Manual':
+            row['stopped'] = convertToTimeDict(endDay, endTime)
+        else:
+            endTime = startTime
+            endTime += timedelta(hours=timeDuration.tm_hour, minutes=timeDuration.tm_min, seconds=timeDuration.tm_sec)
+            row['stopped'] = convertToTimeDict(endDay, endTime)  
+        row['totaltime'] = { 'hours': timeDuration.tm_hour, 'minutes': timeDuration.tm_min }
+        row['project'] = project
         results.append(row)
     return json.dumps(results)
+
+def convertToTimeDict(day, time):
+    return { 'day': day, 'hours': time.hour, 'minutes': time.minute }
 
 
 @app.route('/getProjectData/<project>', methods=['GET'])

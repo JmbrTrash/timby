@@ -154,7 +154,10 @@ module.exports = {
       } else {
        alert('Cancelled deletion!')
       }
+    },
+
+    toTime(timeData) {
+      return timeData.hours + 'h ' + timeData.minutes + 'mins' + (timeData.day ? ' (' + timeData.day + ')' : '')
     }
-    
   }
 }

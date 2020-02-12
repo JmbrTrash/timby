@@ -89,6 +89,9 @@
   <v-list >
     <v-list-item >
       <v-list-item-content >
+        <v-list-item-title ><b>Type</b></v-list-item-title >
+      </v-list-item-content >
+      <v-list-item-content >
         <v-list-item-title ><b>Time Started</b></v-list-item-title >
       </v-list-item-content >
       <v-list-item-content style="text-align: center;">
@@ -106,19 +109,22 @@
     </v-list-item>
     <v-list-item
       v-for="item in entriesWeek"
-      :key="item.totaltime"
+      :key="item.id"
     >
     <v-list-item-content>
-      <v-list-item-title v-text="item.start"></v-list-item-title>
+      <v-list-item-title v-text="item.type" />
+    </v-list-item-content>
+    <v-list-item-content>
+      <v-list-item-title v-text="toTime(item.start)" />
     </v-list-item-content>
     <v-list-item-content style="text-align: center;">
-      <v-list-item-title v-text="item.stopped"></v-list-item-title>
+      <v-list-item-title v-text="toTime(item.stopped)" />
     </v-list-item-content>
     <v-list-item-content style="text-align: center;">
-      <v-list-item-title v-text="item.totaltime"></v-list-item-title>
+      <v-list-item-title  v-text="toTime(item.totaltime)" />
     </v-list-item-content>
       <v-list-item-content style="text-align: center;">
-        <v-list-item-title v-text="item.project"></v-list-item-title>
+        <v-list-item-title v-text="item.project" />
       </v-list-item-content>
 
       <v-list-item-avatar color="error" @click="deleteEntry(item.id)" >

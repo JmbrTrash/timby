@@ -94,11 +94,6 @@ module.exports = {
       await this.getTotalTimeUsers(this.currentProject)
       await this.getProjectWeeks(this.currentProject)
      
-    },
-
-    getTotalTime() {
-      timeData = {}
-      return timeData
     }
   }
 }
