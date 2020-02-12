@@ -2,6 +2,7 @@ from flask import Flask, send_from_directory
 from flask import request
 import json
 import time
+import datetime
 
 import threading
 from telegram.ext import Updater
@@ -206,7 +207,7 @@ def getProjectList():
     try:
         db = getdb()
         cursor = db.cursor()
-        projectsSQL = "SELECT name FROM projects"
+        projectsSQL = "SELECT name FROM projects ORDER BY name ASC"
         cursor.execute(projectsSQL)
         projectList = cursor.fetchall()
         return projectList
@@ -541,31 +542,44 @@ def allEntriesWeekUser(week, user):
 @app.route('/getProjectData/<project>', methods=['GET'])
 def getProjectData(project):
     time_entries_by_week_query = '''SELECT user as User, from_unixtime(begintime) as Start, WEEK(from_unixtime(begintime)) as Week, 
-    ROUND(sum(totaltime),4) as Duration, project as Name
+    sum(totaltime) as Duration, project as Name
     FROM time_entries
     WHERE project=%s
     GROUP BY week, user
     order by week DESC ;
     '''
-    db = getdb()
+    db = getdb() 
     c = db.cursor()
     c.execute(time_entries_by_week_query, (project,))
     entries = c.fetchall()
-    results = []
+    timeResults = {}
+    totalSeconds = 0
     for entry in entries:
-        row = {}
-        hours = entry[3] / 3600
-        minutes = (entry[3] / 60) % 60
-        time = ("%d,%02d" % (hours, minutes))
-        jipla = str(entry[1]).split(' ', 1)
+        dateTime = entry[1].timetuple()
+        duration = int(entry[3])
+        year = dateTime.tm_year
+        totalSeconds += duration
+        if (year in timeResults):
+            currentTimeData = timeResults[year]
+            currentTimeData['seconds'] += duration
+        else:
+            timeResults[year] = { 'seconds': duration }
+    timeResults = convertToTime(timeResults)
+    timeResults['Total'] = timeForSeconds(totalSeconds)
+    return json.dumps(timeResults)
 
-        row['user'] = entry[0]
-        row['year'] = jipla[0][0:4]
-        row['start'] = jipla[1][:-3] + 'u (' + jipla[0] + ')'
-        row['week'] = entry[2]
-        row['totaltime'] = str(time)
-        results.append(row)
-    return json.dumps(results)
+def convertToTime(timerResults):
+    timeData = {}
+    for year in timerResults:
+        times = timerResults[year]
+        seconds = times['seconds']
+        timeData[year] = timeForSeconds(seconds)
+    return timeData
+
+def timeForSeconds(seconds):
+    hours = int(seconds / 3600)
+    minutes = int(seconds % 3600 / 60)
+    return { 'hours': hours, 'minutes': minutes }
 
 @app.route('/getTotalTimesProject/<project>', methods=['GET'])
 def getTotalTimesProject(project):

@@ -41,9 +41,7 @@
       <v-toolbar-title> Timby</v-toolbar-title>
       <img style="height: 50px; width: auto; margin-left: auto;" src="https://www.jimber.org/img/logoLight.svg">
     </v-app-bar>
-
     <v-content>
-      
       <v-card-title>Choose project:</v-card-title>
       <v-select
       @input="setSelected"
@@ -52,23 +50,13 @@
       outlined
       label="Project"
     ></v-select>
-    <v-card id="total1" class="totaltimes d-none">
+    <v-card v-if="currentProject" id="total1" class="totaltimes">
     <v-row no-gutters>
-      <v-col>
-        <h4>Total time spent: </h2>{{totalTime}}
-
+      <v-col v-for="(time, key) in projectData" :key="key">
+        <h4>{{key}}</h4>
+        {{time.hours}}h
+        {{time.minutes}}min
       </v-col>
-      <v-col>
-
-        <h4>Total time (2019): </h4>{{totalTime2019}}
-
-      </v-col>
-      <v-col>
-    
-        <h4>Total time (2020): </h4>{{totalTime2020}}
-
-      </v-col>
-  
     </v-row>
 </v-card>
     <v-expansion-panels
@@ -78,50 +66,43 @@
         v-model="panel"
         style="margin-bottom: 20px;"
       >
-     
-        
-    
         <v-expansion-panel
           v-for="(item,i) in weeks"
           :key="i"      
           multiple
         >
-
-          <v-expansion-panel-header @click="ClickedWeek(item[0],item[1])">Week {{item[0]}} ({{item[1]}})</v-expansion-panel-header>
-      
+          <v-expansion-panel-header @click="ClickedWeek(item[0],item[1])">
+            Week {{item[0]}} ({{item[1]}})
+          </v-expansion-panel-header>
+        
           <v-expansion-panel-content>
             <v-data-table
-      :headers="headers"
-      :sort-by="'time'"
-      :sort-desc="true"
-      :items="ProjectDataWeek"
-      :items-per-page="20"
-      class="elevation-1"
-      hide-default-footer
-    >
-  
-  </v-data-table>
+              :headers="headers"
+              :sort-by="'time'"
+              :sort-desc="true"
+              :items="ProjectDataWeek"
+              :items-per-page="20"
+              class="elevation-1"
+              hide-default-footer
+            />
           </v-expansion-panel-content>
         </v-expansion-panel>
-      </v-expansion-panels>
-      <v-card id="total2" class="totaltimes d-none">
+    </v-expansion-panels>
+      <v-card v-if="currentProject" id="total2" class="totaltimes">
         <v-card-title>
           Total hours spent on project per user: 
         </v-card-title>
         <v-data-table
-      :headers="headers"
-      :sort-by="'time'"
-      :sort-desc="true"
-      :items="totalTimesUsers"
-      :items-per-page="20"
-      class="elevation-1"
-      hide-default-footer
-    >
+          :headers="headers"
+          :sort-by="'time'"
+          :sort-desc="true"
+          :items="totalTimesUsers"
+          :items-per-page="20"
+          class="elevation-1"
+          hide-default-footer
+        />
       </v-card>
-    
-
     </v-content>
-    
     <v-footer
       color="#003180"
       app
