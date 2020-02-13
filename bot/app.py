@@ -540,7 +540,7 @@ def allEntriesWeekUser(week, user):
             timeData['stopped'] = convertToTimeDict(endDay, endTime)
         else:
             endTime = startTime
-            endTime += timedelta(hours=str(timeDuration['hours']), minutes=str(timeDuration['minutes']))
+            endTime += timedelta(hours=timeDuration['hours'], minutes=timeDuration['minutes'])
             timeData['stopped'] = convertToTimeDict(endDay, endTime)  
         timeData['totaltime'] = timeDuration
         timeData['project'] = project
