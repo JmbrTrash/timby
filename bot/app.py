@@ -63,8 +63,8 @@ def hello():
 
         lasttime=session[1]
         session[1] = seconds
-        session[2]=session[2] + (seconds - lasttime) #update totaltime
-        totaltime = str(datetime.timedelta(seconds=session[2]))
+        workedTime = session[2] + (seconds - lasttime) #update totaltime
+        totaltime = time.strftime("%H hours and %M minutes", time.gmtime(workedTime))
         project = session[4]
         if project is None:
             chat_id = get_chat_id(user)
@@ -331,9 +331,10 @@ def session(update, context):
             
             lasttime = session[1]
             workedTime = session[2] + (now - lasttime) #update totaltime
-
-        
-        context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} seconds on project {}".format(str(datetime.timedelta(seconds=workedTime)), session[4]))
+            projectName = session[4]
+            timeData = time.strftime("%H hours and %M minutes", time.gmtime(workedTime))
+            
+        context.bot.send_message(chat_id=update.effective_chat.id, text="You've been working for {} on project {}".format(timeData, projectName))
 
     except Exception as e:
         print(e)
@@ -356,7 +357,7 @@ def listUsers(update, context):
 def get_chat_id(user):
     db = getdb()
     c = db.cursor()
-    c.execute("SELECT chat_id FROM chatids WHERE user=%s", (user,))
+    c.execute("SELECT id FROM chatids WHERE user=%s", (user,))
     obj = c.fetchone()
     if obj is None:
         return None
