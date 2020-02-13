@@ -34,8 +34,9 @@ def getdb():
 
     return mydb
 
+@app.route('/')
 @app.route('/<path:path>')
-def ui(path):
+def renderUi(path = 'index.html'):
     return send_from_directory('../ui', path)
 
 @app.route('/report', methods=['GET'])

@@ -17,6 +17,7 @@ document.addEventListener('DOMContentLoaded', (event) => {
   Vue.component('nav-bar', httpVueLoader('./components/navigation/navbar.vue'))
 
   const router = new VueRouter({
+    mode: 'history',
     routes: [
       {
         path: '/',
