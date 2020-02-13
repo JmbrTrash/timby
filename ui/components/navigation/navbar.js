@@ -4,20 +4,15 @@ module.exports = {
     data () {
         return {
             drawer: null,
+            routes: []
         }
     },
-    
-    methods: {
-        goToPersonal() {
-            this.$router.push(`personal`)
-        },
 
-        goToDash() {
-            this.$router.push(`dashboard`)
-        },
-
-        goToProject() {
-            this.$router.push(`projects`)
-        }
-    },
+    created() {
+        this.$router.options.routes.forEach(route => {
+            if (route.meta) {
+                this.routes.push(route)
+            }
+        })
+    }
 };

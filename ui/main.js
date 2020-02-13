@@ -17,26 +17,35 @@ document.addEventListener('DOMContentLoaded', (event) => {
   Vue.component('nav-bar', httpVueLoader('./components/navigation/navbar.vue'))
 
   const router = new VueRouter({
-    routes: [{
-      path: '/',
-      component: httpVueLoader('./views/timby/index.vue'),
-      name: 'timby',
-    },
-    {
-      path: '/personal',
-      component: httpVueLoader('./views/personal/personal.vue'),
-      name: 'personal',
-    },{
-      path: '/dashboard',
-      component: httpVueLoader('./views/timby/index.vue'),
-      name: 'dashboard',
-    },
-    {
-      path: '/projects',
-      component: httpVueLoader('./views/projects/projects.vue'),
-      name: 'projects',
-    }
-  ]
+    routes: [
+      {
+        path: '/',
+        component: httpVueLoader('./views/timby/index.vue'),
+        name: 'dashboard',
+        meta: { 
+          'title': 'Dashboard',
+          'icon': 'dashboard'
+        }
+      },
+      {
+        path: '/personal',
+        component: httpVueLoader('./views/personal/personal.vue'),
+        name: 'personal',
+        meta: { 
+          'title': 'Personal',
+          'icon': 'face'
+        }
+      },
+      {
+        path: '/projects',
+        component: httpVueLoader('./views/projects/projects.vue'),
+        name: 'projects',
+        meta: { 
+          'title': 'Projects',
+          'icon': 'folder'
+        }
+      }
+    ]
   })
 
   new Vue({

@@ -4,28 +4,12 @@
         app
     >
         <v-list dense>
-            <v-list-item @click="goToDash">
+            <v-list-item v-for="route in routes" :key="route.name" :to="route.path">
                 <v-list-item-action>
-                <v-icon>dashboard</v-icon>
+                    <v-icon>{{ route.meta.icon }}</v-icon>
                 </v-list-item-action>
                 <v-list-item-content>
-                <v-list-item-title>Dashboard</v-list-item-title>
-                </v-list-item-content>
-            </v-list-item>
-            <v-list-item @click="goToPersonal">
-                <v-list-item-action>
-                <v-icon>face</v-icon>
-                </v-list-item-action>
-                <v-list-item-content>
-                <v-list-item-title>Personal</v-list-item-title>
-                </v-list-item-content>
-            </v-list-item>
-            <v-list-item @click="goToProject">
-                <v-list-item-action>
-                <v-icon>folder</v-icon>
-                </v-list-item-action>
-                <v-list-item-content>
-                <v-list-item-title>Projects</v-list-item-title>
+                    <v-list-item-title>{{ route.meta.title }}</v-list-item-title>
                 </v-list-item-content>
             </v-list-item>
         </v-list>
