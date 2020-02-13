@@ -19,18 +19,15 @@ module.exports = {
       weeks: {},
       headers: [ 
         { text: 'User', value: 'user' },
-           { text: 'Time worked', value: 'time' }
-          
+        { text: 'Hours worked', value: 'time.hours' },
+        { text: 'Minutes worked', value: 'time.minutes' }
       ],
-      
     }
   },
-
 
   computed: {
     
   },
-
 
   mounted () {
     axios.get(`http://${window.location.hostname}:${window.location.port}/projects`)
@@ -49,7 +46,6 @@ module.exports = {
     goToProject(){
       this.$router.push(`projects`)
     },
-
 
     getProjectData(project){
         return axios.get(`http://${window.location.hostname}:${window.location.port}/getProjectData/${project}`).then(r => {
@@ -77,13 +73,6 @@ module.exports = {
     ClickedWeek(week, year){
       this.getProjectDataPerWeek(this.currentProject, week, year)
       
-    },
-
-    displayTopTimes (){
-      for(i=0;i<this.totalTimesUsers.length;i++)
-      {
-        console.log(this.totalTimesUsers[i])
-      }
     },
 
     async setSelected(project) {

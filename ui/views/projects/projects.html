@@ -78,8 +78,7 @@
           <v-expansion-panel-content>
             <v-data-table
               :headers="headers"
-              :sort-by="'time'"
-              :sort-desc="true"
+              :sort-by="'user'"
               :items="ProjectDataWeek"
               :items-per-page="20"
               class="elevation-1"
@@ -94,8 +93,7 @@
         </v-card-title>
         <v-data-table
           :headers="headers"
-          :sort-by="'time'"
-          :sort-desc="true"
+          :sort-by="'user'"
           :items="totalTimesUsers"
           :items-per-page="20"
           class="elevation-1"

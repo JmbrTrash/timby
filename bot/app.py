@@ -400,14 +400,7 @@ def getDataWeek(week, year):
     entries = c.fetchall()
     results = []
     for entry in entries:
-        row = {}
-        hours = entry[1] / 3600
-        minutes = (entry[1] / 60) % 60
-        time = ("%d Hours, %02d Minutes" % (hours, minutes))
-
-        row['user'] = entry[0]
-        row['time'] = time
-        results.append(row)
+        results.append(convertEntryToTimeData(entry))
     return json.dumps(results)
 
 @app.route('/getDataWeekPerProject/<project>/<week>/<year>', methods=['GET'])
@@ -423,14 +416,17 @@ def getDataWeekPerProject(project, week, year):
     entries = c.fetchall()
     results = []
     for entry in entries:
-        row = {}
-        hours = entry[1] / 3600
-        minutes = (entry[1] / 60) % 60
-        time = ("%d Hours, %02d Minutes" % (hours, minutes))
-        row['user'] = entry[0]
-        row['time'] = time
-        results.append(row)
+        results.append(convertEntryToTimeData(entry))
     return json.dumps(results)
+
+def convertEntryToTimeData(entry):
+    timeData = {}
+    user = entry[0]
+    timeDuration = int(entry[1])
+    timeData['user'] = user
+    timeDict = timeForSeconds(timeDuration)
+    timeData['time'] = timeDict
+    return timeData
 
 @app.route('/users', methods=['GET'])
 def getUsers():
@@ -452,7 +448,7 @@ def getProjects():
 
 @app.route('/getTypes/<user>/<week>', methods=['GET'])
 def getTypes(user, week):
-    typesquery = '''SELECT sum(totaltime) as totaal, type from time_entries WHERE USER=%s and  WEEK(from_unixtime(begintime), '%h') = %s group by type;'''
+    typesquery = '''SELECT sum(totaltime) as total, type from time_entries WHERE USER=%s and  WEEK(from_unixtime(begintime), '%h') = %s group by type;'''
     db = getdb()
     c = db.cursor()
     c.execute(typesquery, (user, week))
@@ -461,7 +457,7 @@ def getTypes(user, week):
     for entry in entries:
         hours = int(entry[0]/3600)
         minutes = (entry[0] /60) % 60
-        time=("%d:%02d" % (hours, minutes))
+        time=("%02d:%02d" % (hours, minutes))
         results[entry[1]]= time
     return json.dumps(results)
 
@@ -593,12 +589,13 @@ def convertToTime(timerResults):
 
 def timeForSeconds(seconds):
     hours = int(seconds / 3600)
-    minutes = int(seconds % 3600 / 60)
+    minutes = int((seconds / 60) % 60)
+    minutes = ("%02d" % (minutes))
     return { 'hours': hours, 'minutes': minutes }
 
 @app.route('/getTotalTimesProject/<project>', methods=['GET'])
 def getTotalTimesProject(project):
-    time_entries_by_week_query = '''SELECT sum(totaltime) as total, user from time_entries where project = %s group by user
+    time_entries_by_week_query = '''SELECT user, sum(totaltime) as total from time_entries where project = %s group by user
     '''
     db = getdb()
     c = db.cursor()
@@ -606,14 +603,7 @@ def getTotalTimesProject(project):
     entries = c.fetchall()
     results = []
     for entry in entries:
-        row = {}
-        hours = entry[0] / 3600
-        minutes = (entry[0] / 60) % 60
-        time = ("%d Hours, %02d Minutes" % (hours, minutes))
-
-        row['user'] = entry[1]
-        row['time'] = str(time)
-        results.append(row)
+        results.append(convertEntryToTimeData(entry))
     return json.dumps(results)
 
 
