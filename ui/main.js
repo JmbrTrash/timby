@@ -8,12 +8,13 @@ import './packages/legacy/fontawesome-pro/js/all.js'
 import config from './config/index.js'
 import store from './store/index.js'
 
-
 // Make sure the dom is loaded.
 document.addEventListener('DOMContentLoaded', (event) => {
   Vue.use(Vuetify)
   Vue.use(VueRouter)
   window.config = config
+
+  Vue.component('nav-bar', httpVueLoader('./components/navigation/navbar.vue'))
 
   const router = new VueRouter({
     routes: [{

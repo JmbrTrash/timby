@@ -1,144 +1,93 @@
 <div id="app">
   <v-app id="inspire">
-    <v-navigation-drawer
-      v-model="drawer"
-      app
-    >
-      <v-list dense>
-        <v-list-item @click="goToDash">
-          <v-list-item-action>
-            <v-icon>dashboard</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Dashboard</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item @click="goToPersonal">
-          <v-list-item-action>
-            <v-icon>face</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Personal</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item @click="goToProject">
-          <v-list-item-action>
-            <v-icon>folder</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Projects</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-app-bar
-      app
-      color="#003180"
-      dark
-    >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title> Timby</v-toolbar-title>
-      <img style="height: 50px; width: auto; margin-left: auto;" src="https://www.jimber.org/img/logoLight.svg">
-    </v-app-bar>
-
-
-
+    <nav-bar></nav-bar>
     <v-content>
-      
-      <v-card-title>Choose user:</v-card-title>
-      <v-select
-      @input="setSelected"
-      :items="items"
-      style="margin: 20px;"
-      outlined
-      label="User"
-    >
-  </v-select>
-      
-
-    <v-data-table
-    :headers="headers"
-    :items="time_entries"
-    :items-per-page="500" 
-    id="table"
-    class="elevation-1 d-none"
-    @click:row="handleClick"
-    hide-default-footer
-  >
-</v-data-table>
-  
-      </v-card>
-      <v-dialog
-      v-model="dialog"
-      fullscreen hide-overlay transition="dialog-bottom-transition"
-      
-    >
-
       <v-card>
-        <v-toolbar dark color="#003180">
-          <v-btn style="margin: 0px 20px;" icon color="error" dark @click="dialog = false">
-           Close
-          </v-btn>
-          <v-toolbar-title>Entries from week {{week}} ({{ new Date().getFullYear() }})</v-toolbar-title>
-          <v-spacer></v-spacer>
-        </v-toolbar>
-        
-    
-
-  <v-list >
-    <v-list-item >
-      <v-list-item-content >
-        <v-list-item-title ><b>Type</b></v-list-item-title >
-      </v-list-item-content >
-      <v-list-item-content >
-        <v-list-item-title ><b>Time Started</b></v-list-item-title >
-      </v-list-item-content >
-      <v-list-item-content style="text-align: center;">
-        <v-list-item-title><b>Time Stopped</b></v-list-item-title>
-      </v-list-item-content>
-      <v-list-item-content style="text-align: center;">
-        <v-list-item-title><b>Total Time</b></v-list-item-title>
-      </v-list-item-content>
-      <v-list-item-content style="text-align: center;">
-        <v-list-item-title><b>Project</b></v-list-item-title>
-      </v-list-item-content>
-      <v-list-item-avatar>
-        <v-icon></v-icon>
-       </v-list-item-avatar>
-    </v-list-item>
-    <v-list-item
-      v-for="item in entriesWeek"
-      :key="item.id"
-    >
-    <v-list-item-content>
-      <v-list-item-title v-text="item.type" />
-    </v-list-item-content>
-    <v-list-item-content>
-      <v-list-item-title v-text="toTime(item.start)" />
-    </v-list-item-content>
-    <v-list-item-content style="text-align: center;">
-      <v-list-item-title v-text="toTime(item.stopped)" />
-    </v-list-item-content>
-    <v-list-item-content style="text-align: center;">
-      <v-list-item-title  v-text="toTime(item.totaltime)" />
-    </v-list-item-content>
-      <v-list-item-content style="text-align: center;">
-        <v-list-item-title v-text="item.project" />
-      </v-list-item-content>
-
-      <v-list-item-avatar color="error" @click="deleteEntry(item.id)" >
-       <v-icon>clear</v-icon>
-      </v-list-item-avatar>
-    </v-list-item>
-  </v-list>
-</v-card>
-        
-    </v-dialog>
-
-
+        <v-card-title>Choose user:</v-card-title>
+        <v-select
+          @input="setSelected"
+          :items="items"
+          style="margin: 20px;"
+          outlined
+          label="User"
+        />
+      </v-card>
+      <v-card           
+        v-if="time_entries"
+      >
+        <v-card-title>Year overview for </v-card-title>
+        <v-data-table
+          :headers="headers"
+          :items="time_entries"
+          :items-per-page="500"
+          class="elevation-1"
+          @click:row="openTimeOverview"
+          hide-default-footer
+        />
+      </v-card>
     </v-content>
-    
+    <v-dialog
+        v-model="dialog"
+        fullscreen
+        hide-overlay
+        transition="dialog-bottom-transition" 
+      >
+        <v-card>
+          <v-toolbar dark color="#003180">
+            <v-btn style="margin: 0px 20px;" icon color="error" dark @click="dialog = false">
+            Close
+            </v-btn>
+            <v-toolbar-title>Entries from week {{week}} ({{ new Date().getFullYear() }})</v-toolbar-title>
+            <v-spacer></v-spacer>
+          </v-toolbar>
+          <v-list >
+            <v-list-item >
+              <v-list-item-content >
+                <v-list-item-title ><b>Type</b></v-list-item-title >
+              </v-list-item-content >
+              <v-list-item-content >
+                <v-list-item-title ><b>Time Started</b></v-list-item-title >
+              </v-list-item-content >
+              <v-list-item-content style="text-align: center;">
+                <v-list-item-title><b>Time Stopped</b></v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-content style="text-align: center;">
+                <v-list-item-title><b>Total Time</b></v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-content style="text-align: center;">
+                <v-list-item-title><b>Project</b></v-list-item-title>
+              </v-list-item-content>
+              <v-list-item-avatar>
+                <v-icon></v-icon>
+              </v-list-item-avatar>
+            </v-list-item>
+            <v-list-item
+              v-for="item in entriesWeek"
+              :key="item.id"
+            >
+            <v-list-item-content>
+              <v-list-item-title v-text="item.type" />
+            </v-list-item-content>
+            <v-list-item-content>
+              <v-list-item-title v-text="toTime(item.start)" />
+            </v-list-item-content>
+            <v-list-item-content style="text-align: center;">
+              <v-list-item-title v-text="toTime(item.stopped)" />
+            </v-list-item-content>
+            <v-list-item-content style="text-align: center;">
+              <v-list-item-title  v-text="toTime(item.totaltime)" />
+            </v-list-item-content>
+              <v-list-item-content style="text-align: center;">
+                <v-list-item-title v-text="item.project" />
+              </v-list-item-content>
+
+              <v-list-item-avatar color="error" @click="deleteEntry(item.id)" >
+              <v-icon>clear</v-icon>
+              </v-list-item-avatar>
+            </v-list-item>
+          </v-list>
+        </v-card>
+      </v-dialog>
     <v-footer
       color="#003180"
       app

@@ -509,13 +509,13 @@ def allEntriesWeekUser(week, user):
     time_entries_by_week_query = '''SELECT 
     begintime as Start,
     lasttime as Stop,  
-    sec_to_time(totaltime) as Duration,
+    totaltime as Duration,
     DAYNAME(from_unixtime(begintime)) as Daynamestarted, 
     DAYNAME(from_unixtime(lasttime)) as Daynamestopped,
     project,
     id,
     type
-    FROM time_entries where WEEK(from_unixtime(begintime)) = %s and user=%s;
+    FROM time_entries where WEEK(from_unixtime(begintime)) = %s and user=%s ORDER BY type ASC;
     '''
     db = getdb()
     c = db.cursor()
@@ -523,27 +523,27 @@ def allEntriesWeekUser(week, user):
     entries = c.fetchall()
     results = []
     for entry in entries:
-        row = {}
+        timeData = {}
         startTime = datetime.fromtimestamp(entry[0])
         endTime = datetime.fromtimestamp(entry[1])
-        timeDuration = time.strptime(str(entry[2]), '%H:%M:%S')
+        timeDuration = timeForSeconds(int(str(entry[2])))
         startDay = entry[3]
         endDay = entry[4]
         project = entry[5]
         entryId = entry[6]
         entryType = entry[7]
-        row['id'] = entryId
-        row['type'] = entryType
-        row['start'] = convertToTimeDict(startDay, startTime)
+        timeData['id'] = entryId
+        timeData['type'] = entryType
+        timeData['start'] = convertToTimeDict(startDay, startTime)
         if entryType != 'Manual':
-            row['stopped'] = convertToTimeDict(endDay, endTime)
+            timeData['stopped'] = convertToTimeDict(endDay, endTime)
         else:
             endTime = startTime
-            endTime += timedelta(hours=timeDuration.tm_hour, minutes=timeDuration.tm_min, seconds=timeDuration.tm_sec)
-            row['stopped'] = convertToTimeDict(endDay, endTime)  
-        row['totaltime'] = { 'hours': timeDuration.tm_hour, 'minutes': timeDuration.tm_min }
-        row['project'] = project
-        results.append(row)
+            endTime += timedelta(hours=str(timeDuration['hours']), minutes=str(timeDuration['minutes']))
+            timeData['stopped'] = convertToTimeDict(endDay, endTime)  
+        timeData['totaltime'] = timeDuration
+        timeData['project'] = project
+        results.append(timeData)
     return json.dumps(results)
 
 def convertToTimeDict(day, time):

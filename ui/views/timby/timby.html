@@ -1,47 +1,7 @@
 <div id="app">
   <v-app id="inspire">
-    <v-navigation-drawer
-      v-model="drawer"
-      app
-    >
-      <v-list dense>
-        <v-list-item @click="goToDash">
-          <v-list-item-action>
-            <v-icon>dashboard</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Dashboard</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item @click="goToPersonal">
-          <v-list-item-action>
-            <v-icon>face</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Personal</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-        <v-list-item @click="goToProject">
-          <v-list-item-action>
-            <v-icon>folder</v-icon>
-          </v-list-item-action>
-          <v-list-item-content>
-            <v-list-item-title>Projects</v-list-item-title>
-          </v-list-item-content>
-        </v-list-item>
-      </v-list>
-    </v-navigation-drawer>
-
-    <v-app-bar
-      app
-      color="#003180"
-      dark
-    >
-      <v-app-bar-nav-icon @click.stop="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title> Timby</v-toolbar-title>
-      <img style="height: 50px; width: auto; margin-left: auto;" src="https://www.jimber.org/img/logoLight.svg">
-    </v-app-bar>
-
+    <nav-bar></nav-bar>
+    
     <v-content id='content'>
       
   
