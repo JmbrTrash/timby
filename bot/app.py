@@ -64,7 +64,8 @@ def hello():
         lasttime=session[1]
         session[1] = seconds
         workedTime = session[2] + (seconds - lasttime) #update totaltime
-        totaltime = time.strftime("%H hours and %M minutes", time.gmtime(workedTime))
+        if workedTime > 0:
+            totaltime = time.strftime("%H hours and %M minutes", time.gmtime(workedTime))
         project = session[4]
         if project is None:
             chat_id = get_chat_id(user)
@@ -73,7 +74,7 @@ def hello():
             
         updateRunningSession(session)
         
-    return "User {} is having an active session since {}".format(user, totaltime)
+    return "User {} is having an active session for {}".format(user, totaltime)
 
 def startNewSession( user, project = None, sessionType=None):
     seconds = time.time()
