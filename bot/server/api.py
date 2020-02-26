@@ -1,6 +1,6 @@
 from flask import Blueprint, request
 import json
-from time import time, strftime, gmtime
+from time import time
 from datetime import datetime
 from datetime import timedelta
 
@@ -17,43 +17,51 @@ bot = telegram.Bot(token=API_TOKEN)
 
 
 @api.route('/report', methods=['GET'])
-def hello():
-    seconds = time()
+def report():
     user = request.args.get('user')
 
     session = getRunningSession(user)
-    totaltime = "just now"
-    sessionType = "Unknown"
+    saved_session_type = session[5]
+    chat_id = get_chat_id(user)
+
+    project = session[3]
+    current_time = int(time())
+    session[1] = current_time
+    total_time = "just now"
+    session_type = "Unknown"
+
     if "192.168.2." in str(request.remote_addr):
-        sessionType = "Local"
+        session_type = "Local"
     if '192.168.3.' in str(request.remote_addr):
-        sessionType = "VPN"
+        session_type = "VPN"
     if '127.0.0.1' in str(request.remote_addr):
-        sessionType = "Dev"
+        session_type = "Dev"
 
     if session is None:
-        print("creating new entry for user {}", user)
-        startNewSession(user, None, sessionType)
+        startNewSession(user, None, session_type)
+    elif saved_session_type != session_type:
+        updateRunningSession(session)
+        startNewSession(user, project, session_type)
+        if chat_id is not None:
+            bot.send_message(chat_id=chat_id,
+                            text="You started a new session, connection changed to {}".format(session_type))
     else:
-
-        lasttime = session[1]
-        session[1] = seconds
-        workedTime = session[2] + (seconds - lasttime)
-        if workedTime > 0:
-            totaltime = strftime("%H hours and %M minutes", gmtime(workedTime))
-        project = session[4]
+        saved_time = int(session[0])
+        total_seconds = (current_time - saved_time)
+        hours = int(total_seconds / 3600)
+        minutes = int((total_seconds / 60) % 60)
+        total_time = '{} hours and {} minutes'.format(hours, minutes)
         if project is None:
-            chat_id = get_chat_id(user)
             if chat_id is not None:
                 bot.send_message(chat_id=chat_id,
                                  text="You are working without active project, please set project using /project { projectname }")
 
         updateRunningSession(session)
 
-    return "User {} is having an active session for {}".format(user, totaltime)
+    return "User {} is having an active session on {}, {}".format(user, project, total_time)
 
 
-def getProjectList():
+def get_project_list():
     try:
         db = get_db()
         cursor = db.cursor()
@@ -169,7 +177,7 @@ def getUsers():
 
 @api.route('/projects', methods=['GET'])
 def getProjects():
-    currentProjects = getProjectList()
+    currentProjects = get_project_list()
     return json.dumps(currentProjects)
 
 

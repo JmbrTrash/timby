@@ -1,7 +1,7 @@
 from time import time, strftime, gmtime
 from server.database import get_db
 
-from server.api import getProjectList
+from server.api import get_project_list
 from server.session import startNewSession, getAllRunningSessions, getRunningSession, updateRunningSession
 
 
@@ -38,6 +38,23 @@ def addManualSession(update, context):
         except Exception as e:
             print(e)
     context.bot.send_message(chat_id=update.effective_chat.id, text="Usage: /manual {project} {time}")
+
+
+def current_session(update, context):
+    username = update.message.chat.username
+    session = getRunningSession(username)
+
+    if session is None:
+        context.bot.send_message(chat_id=update.effective_chat.id, text="No active session!")
+    else:
+        current_project = session[3]
+        begin_time = int(session[0])
+        last_time = int(session[1])
+        total_seconds = (last_time - begin_time)
+        hours = int(total_seconds / 3600)
+        minutes = int((total_seconds / 60) % 60)
+        total_time = '{} hours and {} minutes'.format(hours, minutes)
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Active session on {} for {}".format(current_project, total_time))
 
 
 def createProject(update, context):
@@ -93,7 +110,7 @@ def projectExists(projectName):
 
 
 def listProjects(update, context):
-    currentProjects = cursorListToString(getProjectList())
+    currentProjects = cursorListToString(get_project_list())
     if currentProjects is None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No projects found!")
     else:
@@ -136,7 +153,7 @@ def project(update, context):
                                      text="You are currently working on {}".format(session[4]))
             return
         if (projectExists(project_name) is False):
-            project_list = cursorListToString(getProjectList())
+            project_list = cursorListToString(get_project_list())
             context.bot.send_message(chat_id=update.effective_chat.id,
                                      text=("Project {} does not exists!" + "\n" + "Available projects: {}").format(
                                          project_name, project_list))
@@ -151,30 +168,6 @@ def project(update, context):
                                      text="Started a new session with project set to {}!".format(project_name))
     else:
         context.bot.send_message(chat_id=update.effective_chat.id, text="You really need a username dude...")
-
-
-def session(update, context):
-    username = update.message.chat.username
-    # args = update.message.text.split()
-
-    try:
-        now = time()
-        if username is not None:
-            session = getRunningSession(username)
-            if session is None:
-                context.bot.send_message(chat_id=update.effective_chat.id, text="You have no active session")
-                return
-
-            lasttime = session[1]
-            workedTime = session[2] + (now - lasttime)  # update totaltime
-            projectName = session[4]
-            timeData = strftime("%H hours and %M minutes", gmtime(workedTime))
-
-        context.bot.send_message(chat_id=update.effective_chat.id,
-                                 text="You've been working for {} on project {}".format(timeData, projectName))
-
-    except Exception as e:
-        print(e)
 
 
 def take_break(update, context):

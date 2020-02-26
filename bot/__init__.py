@@ -36,10 +36,10 @@ if __name__ == '__main__':
     project_handler = CommandHandler('p', bot_commands.project)
     dispatcher.add_handler(project_handler)
 
-    session_handler = CommandHandler('session', bot_commands.session)
+    session_handler = CommandHandler('session', bot_commands.current_session)
     dispatcher.add_handler(session_handler)
 
-    session_handler = CommandHandler('s', bot_commands.session)
+    session_handler = CommandHandler('s', bot_commands.current_session)
     dispatcher.add_handler(session_handler)
 
     take_break_handler = CommandHandler('break', bot_commands.take_break)
