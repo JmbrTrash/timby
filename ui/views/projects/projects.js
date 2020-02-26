@@ -36,7 +36,7 @@ module.exports = {
   },
 
   mounted () {
-    axios.get(`http://${window.location.hostname}:${window.location.port}/api/projects`)
+    axios.get(`http://${window.location.hostname}:5000/api/projects`)
     .then(response => {this.projects = response.data; 
     })
   },
@@ -44,25 +44,25 @@ module.exports = {
   methods: {
 
     getProjectData(project){
-        return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getProjectData/${project}`).then(r => {
+        return axios.get(`http://${window.location.hostname}:5000/api/getProjectData/${project}`).then(r => {
           this.projectData = r.data;
         }, this);
     },
 
     getProjectWeeks(project){
-      return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getWeeksPerProject/${project}`)
+      return axios.get(`http://${window.location.hostname}:5000/api/getWeeksPerProject/${project}`)
         .then(response => {
           this.weeks = response.data; 
         }, this)
     },
     getProjectDataPerWeek(project, week, year){
-      return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getDataWeekPerProject/${project}/${week}/${year}`)
+      return axios.get(`http://${window.location.hostname}:5000/api/getDataWeekPerProject/${project}/${week}/${year}`)
         .then(response => {
           this.ProjectDataWeek = response.data; 
         }, this)
     },
     getTotalTimeUsers(project){
-      return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getTotalTimesProject/${project}`).then(r => {
+      return axios.get(`http://${window.location.hostname}:5000/api/getTotalTimesProject/${project}`).then(r => {
         this.totalTimesUsers = r.data;
       }, this)
   },

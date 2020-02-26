@@ -35,12 +35,12 @@ module.exports = {
   computed: {
   },
   mounted () {
-    axios.get(`http://${window.location.hostname}:${window.location.port}/api/time_entries`)
+    axios.get(`http://${window.location.hostname}:5000/api/time_entries`)
       .then(response => { 
         this.items = response.data; 
       })
     this.currentyear = this.valueYear
-    axios.get(`http://${window.location.hostname}:${window.location.port}/api/getWeeks/${this.currentyear}`)
+    axios.get(`http://${window.location.hostname}:5000/api/getWeeks/${this.currentyear}`)
       .then(response => {
         this.weeks = response.data; 
       })
@@ -49,7 +49,7 @@ module.exports = {
     setSelected(year) {
       this.panel = [];
       this.currentyear = year;
-      axios.get(`http://${window.location.hostname}:${window.location.port}/api/getWeeks/${year}`)
+      axios.get(`http://${window.location.hostname}:5000/api/getWeeks/${year}`)
         .then(response => {
           this.weeks = response.data; 
         })
@@ -71,13 +71,13 @@ module.exports = {
       this.dialog = true;
     },
     getUserData(user){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/api/time_entries_week_user/${user}`)
+      axios.get(`http://${window.location.hostname}:5000/api/time_entries_week_user/${user}`)
           .then(response => {this.time_entries = response.data; 
           })
     },
     
     clicked(week){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/api/getDataWeek/${week}/${this.currentyear}`)
+      axios.get(`http://${window.location.hostname}:5000/api/getDataWeek/${week}/${this.currentyear}`)
           .then(response => {
             this.dataPerWeek = response.data; 
           })

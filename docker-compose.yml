@@ -1,0 +1,34 @@
+version: "3.7"
+services:
+
+  python:
+    image: jimber/python_timby:test
+    ports:
+      - 5000:5000
+    networks:
+      - timby_network
+
+  mariadb:
+    image: mariadb:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD
+      - MYSQL_DATABASE
+      - MYSQL_USER
+      - MYSQL_PASSWORD
+    volumes:
+      - /opt/timby/database/mariadb:/var/lib/mysql
+    ports:
+      - 3306:3306
+    networks:
+      - timby_network
+
+  nginx:
+    image: jimber/nginx_timby:test
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - timby_network
+
+networks:
+  timby_network:

@@ -1,9 +1,13 @@
 # General settings
-API_TOKEN = 'enter token here'
+API_TOKEN = 'TOKEN'
 TIME_LIMIT = 300
 
+# Timby settings
+HOST = '0.0.0.0'
+PORT = 5000
+
 # Database settings
-MYSQL_HOST = 'localhost'
-MYSQL_DATABASE = 'timby'
-MYSQL_USER = 'root'
-MYSQL_PASSWORD = 'root'
+MYSQL_HOST = 'HOST'
+MYSQL_DATABASE = 'DATABASE'
+MYSQL_USER = 'USER'
+MYSQL_PASSWORD = 'PASSWORD'

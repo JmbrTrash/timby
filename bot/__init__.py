@@ -1,4 +1,5 @@
 from flask import Flask
+from flask_cors import CORS, cross_origin
 from telegram.ext import Updater
 from telegram.ext import CommandHandler
 
@@ -10,7 +11,7 @@ import bot_commands
 
 import threading
 
-from timby_config import API_TOKEN
+from timby_config import API_TOKEN, PORT, HOST
 
 import mimetypes
 
@@ -20,6 +21,8 @@ mimetypes.add_type('text/javascript', '.js')
 app = Flask(__name__)
 app.register_blueprint(api)
 app.register_blueprint(ui)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 if __name__ == '__main__':
     updater = Updater(token=API_TOKEN, use_context=True)
@@ -67,4 +70,4 @@ if __name__ == '__main__':
     threadBot.start()
     print("thread for bot started, now starting rest server")
     database_init()
-    app.run(host='0.0.0.0', port='8000')
+    app.run(host=HOST, port=PORT)

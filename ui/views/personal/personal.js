@@ -29,7 +29,7 @@ module.exports = {
 
   mounted () {
     console.log(axios)
-    axios.get(`http://${window.location.hostname}:${window.location.port}/api/users`)
+    axios.get(`http://${window.location.hostname}:5000/api/users`)
     .then(response => { 
       this.items = response.data
     })
@@ -37,7 +37,7 @@ module.exports = {
 
   methods: {
     getEntries(){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/api/allEntriesWeekUser/${this.week}/${this.user}`)
+      axios.get(`http://${window.location.hostname}:5000/api/allEntriesWeekUser/${this.week}/${this.user}`)
       .then(response => {
         this.entriesWeek = response.data;
       })
@@ -55,7 +55,7 @@ module.exports = {
     },
 
     getUserData(user){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/api/time_entries_week_user/${user}`)
+      axios.get(`http://${window.location.hostname}:5000/api/time_entries_week_user/${user}`)
           .then(response => {
             this.time_entries = response.data; 
           })
@@ -64,7 +64,7 @@ module.exports = {
     async deleteEntry(value){
       var r = confirm("Are you sure you want to delete this entry?");
       if (r == true) {
-        await axios.delete(`http://${window.location.hostname}:${window.location.port}/api/deleteEntry/${value}`)
+        await axios.delete(`http://${window.location.hostname}:5000/api/deleteEntry/${value}`)
         this.getEntries();
       }
     },
