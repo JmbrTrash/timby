@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'threetransfer',
+  name: 'projects',
   components: {
   },
   props: [],
@@ -18,9 +18,15 @@ module.exports = {
       currentProject:"",
       weeks: {},
       headers: [ 
-        { text: 'User', value: 'user' },
-        { text: 'Hours worked', value: 'time.hours' },
-        { text: 'Minutes worked', value: 'time.minutes' }
+        { 
+          text: 'User', 
+          value: 'user',
+          sortable: false 
+        },
+        { 
+          text: 'Hours worked this week', 
+          value: 'time' 
+        }
       ],
     }
   },
@@ -30,43 +36,33 @@ module.exports = {
   },
 
   mounted () {
-    axios.get(`http://${window.location.hostname}:${window.location.port}/projects`)
+    axios.get(`http://${window.location.hostname}:${window.location.port}/api/projects`)
     .then(response => {this.projects = response.data; 
     })
   },
 
   methods: {
-    
-    goToPersonal(){
-      this.$router.push(`personal`)
-    },
-    goToDash(){
-      this.$router.push(`dashboard`)
-    },
-    goToProject(){
-      this.$router.push(`projects`)
-    },
 
     getProjectData(project){
-        return axios.get(`http://${window.location.hostname}:${window.location.port}/getProjectData/${project}`).then(r => {
+        return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getProjectData/${project}`).then(r => {
           this.projectData = r.data;
         }, this);
     },
 
     getProjectWeeks(project){
-      return axios.get(`http://${window.location.hostname}:${window.location.port}/getWeeksPerProject/${project}`)
+      return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getWeeksPerProject/${project}`)
         .then(response => {
           this.weeks = response.data; 
         }, this)
     },
     getProjectDataPerWeek(project, week, year){
-      return axios.get(`http://${window.location.hostname}:${window.location.port}/getDataWeekPerProject/${project}/${week}/${year}`)
+      return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getDataWeekPerProject/${project}/${week}/${year}`)
         .then(response => {
           this.ProjectDataWeek = response.data; 
         }, this)
     },
     getTotalTimeUsers(project){
-      return axios.get(`http://${window.location.hostname}:${window.location.port}/getTotalTimesProject/${project}`).then(r => {
+      return axios.get(`http://${window.location.hostname}:${window.location.port}/api/getTotalTimesProject/${project}`).then(r => {
         this.totalTimesUsers = r.data;
       }, this)
   },

@@ -1,6 +1,5 @@
 <div id="app">
   <v-app id="inspire">
-    <nav-bar></nav-bar>
     <v-content>
       <v-card-title>Choose project:</v-card-title>
       <v-select
@@ -13,9 +12,9 @@
     <v-card v-if="currentProject" id="total1" class="totaltimes">
       <v-row no-gutters>
         <v-col v-for="(time, key) in projectData" :key="key">
-          <h4>{{key}}</h4>
-          {{time.hours}}h
-          {{time.minutes}}min
+          <h4>{{ key }}</h4>
+          {{ time.hours }}h
+          {{ time.minutes }}min
         </v-col>
       </v-row>
     </v-card>
@@ -42,7 +41,11 @@
                 :items-per-page="20"
                 class="elevation-1"
                 hide-default-footer
-              />
+              >
+                <template v-slot:item.time="{ item }">
+                  <span>{{ item.time | convertTime }}</span>
+                </template>
+              </v-data-table>
             </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
@@ -57,7 +60,11 @@
           :items-per-page="20"
           class="elevation-1"
           hide-default-footer
-        />
+          >
+            <template v-slot:item.time="{ item }">
+              <span>{{ item.time | convertTime }}</span>
+            </template>
+        </v-data-table>
       </v-card>
     </v-content>
     <v-footer

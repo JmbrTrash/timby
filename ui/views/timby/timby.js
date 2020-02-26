@@ -1,106 +1,89 @@
 module.exports = {
-  name: 'threetransfer',
+  name: 'dashboard',
   components: {
   },
   props: [],
   data () {
     return {
-    weeks:[],
-    drawer: null,
-    items: [],
-    dataPerWeek: [],
-    panel:[],
-    valueYear: new Date().getFullYear().toString(),
-    user: "",
-    selected:"this",
-    dialog: false,
-    VPN: 0,
-    Manual: 0,
-    Local: 0,
-    week: 0,
-    expanded: [],
-    currentyear: 0,
-    singleExpand: false,
-    show: false,
-    headers: [
-      {
-        text: 'User',
-        align: 'left',
-        sortable: false,
-        value: 'user',
-      },
-      { text: 'Hours worked this week', value: 'time' },
-     
-    ],
-    
-   time_entries: []
-  }
-  },
-  computed: {
-    ...window.vuex.mapGetters([
-      'uploadMessages',
-      'uploadMessage',
-      'uploading'
-    ]),
-    showUploadButton () {
-      if (this.file === '' || this.uploadMessage.code === 'UPLOADING'){
-        return false
-      }
-      return true
+      weeks:[],
+      items: [],
+      dataPerWeek: [],
+      panel:[],
+      valueYear: new Date().getFullYear().toString(),
+      user: "",
+      selected:"this",
+      dialog: false,
+      week: 0,
+      expanded: [],
+      currentyear: 0,
+      show: false,
+      headers: [
+        {
+          text: 'User',
+          align: 'left',
+          sortable: false,
+          value: 'user',
+        },
+        { 
+          text: 'Hours worked this week', 
+          value: 'time' 
+        },
+      ],
+      time_entries: []
     }
   },
+  computed: {
+  },
   mounted () {
-    axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries`)
-    .then(response => {this.items = response.data; 
-    })
-    
-      this.currentyear = this.valueYear;
-      axios.get(`http://${window.location.hostname}:${window.location.port}/getWeeks/${this.currentyear}`)
-    .then(response => {this.weeks = response.data; 
-    })
-
-
+    axios.get(`http://${window.location.hostname}:${window.location.port}/api/time_entries`)
+      .then(response => { 
+        this.items = response.data; 
+      })
+    this.currentyear = this.valueYear
+    axios.get(`http://${window.location.hostname}:${window.location.port}/api/getWeeks/${this.currentyear}`)
+      .then(response => {
+        this.weeks = response.data; 
+      })
   },
   methods: {
     setSelected(year) {
-      this.panel=[],
+      this.panel = [];
       this.currentyear = year;
-      axios.get(`http://${window.location.hostname}:${window.location.port}/getWeeks/${year}`)
-    .then(response => {this.weeks = response.data; 
-
-    })
+      axios.get(`http://${window.location.hostname}:${window.location.port}/api/getWeeks/${year}`)
+        .then(response => {
+          this.weeks = response.data; 
+        })
+    },
+    customSort(items, index, isDesc) {
+      items.sort((a, b) => {
+        if (index[0] === 'time') {
+          if (isDesc[0]) {
+            return parseInt(b[index]) - parseInt(a[index]);
+          } else {
+            return parseInt(a[index]) - parseInt(b[index]);
+          }
+        }
+      });
+      return items;
     },
     handleClick(value){
       this.week = value.week
       this.dialog = true;
     },
     getUserData(user){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week_user/${user}`)
+      axios.get(`http://${window.location.hostname}:${window.location.port}/api/time_entries_week_user/${user}`)
           .then(response => {this.time_entries = response.data; 
           })
     },
-    goToPersonal(){
-      this.$router.push(`personal`)
-    },
-    goToDash(){
-      this.$router.push(`dashboard`)
-    },
-    goToProject(){
-      this.$router.push(`projects`)
-    },
-
     
-    clicked(value){
-      year = this.currentyear
-
-      axios.get(`http://${window.location.hostname}:${window.location.port}/getDataWeek/${value}/${year}`)
+    clicked(week){
+      axios.get(`http://${window.location.hostname}:${window.location.port}/api/getDataWeek/${week}/${this.currentyear}`)
           .then(response => {
             this.dataPerWeek = response.data; 
-
           })
     },
     fullscreen(){
-      var elem = document.getElementById('jipla');
+      var elem = document.getElementById('fullscreen');
 
         if(elem.requestFullscreen){
             elem.requestFullscreen();
@@ -115,10 +98,5 @@ module.exports = {
             elem.msRequestFullscreen();
         }
     }
-    // ...window.vuex.mapActions([
-
-    // ]),
-  
-    
   }
 }

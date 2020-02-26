@@ -1,8 +1,8 @@
-/* eslint no-undef: 0 */
-/* eslint-disable no-new */
 module.exports = {
   name: 'app',
-  components: {},
+  components: { 
+    'nav-bar': httpVueLoader('../components/navigation/index.vue'),
+  },
   props: [],
   data() {
     return {

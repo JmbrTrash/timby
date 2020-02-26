@@ -1,6 +1,5 @@
 <div id="app">
   <v-app id="inspire">
-    <nav-bar></nav-bar>
     <v-content>
       <v-card>
         <v-card-title>Choose user:</v-card-title>
@@ -10,7 +9,7 @@
           style="margin: 20px;"
           outlined
           label="User"
-        />
+        ></v-select>
       </v-card>
       <v-card           
         v-if="time_entries"
@@ -23,7 +22,11 @@
           class="elevation-1"
           @click:row="openTimeOverview"
           hide-default-footer
-        />
+        >
+          <template v-slot:item.time="{ item }">
+            <span>{{ item.time | convertTime }}</span>
+          </template>
+        </v-data-table>
       </v-card>
     </v-content>
     <v-dialog

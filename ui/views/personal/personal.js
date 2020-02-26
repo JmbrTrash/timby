@@ -1,5 +1,5 @@
 module.exports = {
-  name: 'threetransfer',
+  name: 'personal',
   components: {
   },
   props: [],
@@ -13,33 +13,23 @@ module.exports = {
       headers: [ 
         { text: 'Year', value: 'year'},
         { text: 'Week', value: 'week'},
-        { text: 'Time worked', value: 'totaltime'}
+        { text: 'Time worked', value: 'time'}
       ],
       headersEntries: [ 
         { text: 'Project', value: 'project'},
         { text: 'Start', value: 'start'},
-        { text: 'Time worked', value: 'totaltime'}
+        { text: 'Time worked', value: 'time'}
       ],
       time_entries: undefined
     }
   },
 
   computed: {
-    ...window.vuex.mapGetters([
-      'uploadMessages',
-      'uploadMessage',
-      'uploading'
-    ]),
-    showUploadButton () {
-      if (this.file === '' || this.uploadMessage.code === 'UPLOADING'){
-        return false
-      }
-      return true
-    }
   },
 
   mounted () {
-    axios.get(`http://${window.location.hostname}:${window.location.port}/users`)
+    console.log(axios)
+    axios.get(`http://${window.location.hostname}:${window.location.port}/api/users`)
     .then(response => { 
       this.items = response.data
     })
@@ -47,14 +37,14 @@ module.exports = {
 
   methods: {
     getEntries(){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/allEntriesWeekUser/${this.week}/${this.user}`)
+      axios.get(`http://${window.location.hostname}:${window.location.port}/api/allEntriesWeekUser/${this.week}/${this.user}`)
       .then(response => {
         this.entriesWeek = response.data;
       })
     },
 
-    setSelected(jipla) {
-      this.getUserData(jipla[0]);
+    setSelected(user) {
+      this.getUserData(user[0]);
     },
 
     openTimeOverview(value){
@@ -65,7 +55,7 @@ module.exports = {
     },
 
     getUserData(user){
-      axios.get(`http://${window.location.hostname}:${window.location.port}/time_entries_week_user/${user}`)
+      axios.get(`http://${window.location.hostname}:${window.location.port}/api/time_entries_week_user/${user}`)
           .then(response => {
             this.time_entries = response.data; 
           })
@@ -74,13 +64,13 @@ module.exports = {
     async deleteEntry(value){
       var r = confirm("Are you sure you want to delete this entry?");
       if (r == true) {
-        await axios.delete(`http://${window.location.hostname}:${window.location.port}/deleteEntry/${value}`)
+        await axios.delete(`http://${window.location.hostname}:${window.location.port}/api/deleteEntry/${value}`)
         this.getEntries();
       }
     },
 
     toTime(timeData) {
       return timeData.hours + 'h ' + timeData.minutes + 'mins' + (timeData.day ? ' (' + timeData.day + ')' : '')
-    }
+    },
   }
 }

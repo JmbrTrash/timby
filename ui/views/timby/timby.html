@@ -1,59 +1,44 @@
 <div id="app">
   <v-app id="inspire">
-    <nav-bar></nav-bar>
-    
-    <v-content id='content'>
-      
-  
+    <v-content id="content">
       <v-card-title>Hours per week: </v-card-title>
-      
+
       <v-select
-      :items="['2019','2020']"
-      label="Year"
-      :value="valueYear"
-      style="margin: 20px;"
-      outlined
-      @input="setSelected"
-    ></v-select>
-   
- 
-      <v-expansion-panels
-        popout
-        hover
-        tile
-        v-model="panel"
-      >
-        <v-expansion-panel
-          v-for="(item,i) in weeks"
-          :key="i"
+        :items="['2019','2020']"
+        label="Year"
+        :value="valueYear"
+        style="margin: 20px;"
+        outlined
+        @input="setSelected"
+      ></v-select>
       
-        >
-          <v-expansion-panel-header @click="clicked(item[0])">Week {{item[0]}}</v-expansion-panel-header>
-      
-          <v-expansion-panel-content id='jipla'>
+      <v-expansion-panels popout hover tile v-model="panel">
+        <v-expansion-panel v-for="(item,i) in weeks" :key="i">
+          <v-expansion-panel-header @click="clicked(item[0])">
+            Week {{item[0]}}
+          </v-expansion-panel-header>
+
+          <v-expansion-panel-content id="fullscreen">
             <v-data-table
-      :headers="headers"
-      :sort-by="'time'"
-      :sort-desc="true"
-      :items="dataPerWeek"
-      :items-per-page="20"
-      class="elevation-1"
-      hide-default-footer
-    >
-  
-  </v-data-table>
+              :headers="headers"
+              :sort-by="'time'"
+              :sort-desc="true"
+              :items="dataPerWeek"
+              :custom-sort="customSort"
+              :items-per-page="20"
+              class="elevation-1"
+              hide-default-footer
+            >
+              <template v-slot:item.time="{ item }">
+                <span>{{ item.time | convertTime }}</span>
+              </template>
+            </v-data-table>
           </v-expansion-panel-content>
         </v-expansion-panel>
       </v-expansion-panels>
-   
-    
     </v-content>
-    
 
-    <v-footer
-      color="#003180"
-      app
-    >
+    <v-footer color="#003180" app>
       <span class="white--text">&copy; Jimber 2020</span>
     </v-footer>
   </v-app>

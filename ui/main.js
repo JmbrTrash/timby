@@ -5,16 +5,11 @@ import Vuetify from './packages/ems/vuetify/vuetify.js'
 import httpVueLoader from './packages/ems/httpVueLoader.js'
 import VueRouter from './packages/ems/vue-router.js'
 import './packages/legacy/fontawesome-pro/js/all.js'
-import config from './config/index.js'
-import store from './store/index.js'
 
 // Make sure the dom is loaded.
 document.addEventListener('DOMContentLoaded', (event) => {
   Vue.use(Vuetify)
   Vue.use(VueRouter)
-  window.config = config
-
-  Vue.component('nav-bar', httpVueLoader('./components/navigation/navbar.vue'))
 
   const router = new VueRouter({
     mode: 'history',
@@ -49,6 +44,13 @@ document.addEventListener('DOMContentLoaded', (event) => {
     ]
   })
 
+  Vue.filter('convertTime', function (time) {
+    if (!time) return 'No work time';
+    const hours = parseInt(time / 3600)
+    const minutes = parseInt((time /60) % 60)
+    return `${hours} h ${minutes} min`;
+  })
+
   new Vue({
     el: '#app',
     vuetify: new Vuetify({
@@ -66,7 +68,6 @@ document.addEventListener('DOMContentLoaded', (event) => {
       app: httpVueLoader('./App/index.vue')
     },
     router,
-    store,
     template: '<app></app>'
   })
 })
