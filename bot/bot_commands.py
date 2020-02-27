@@ -83,25 +83,25 @@ def createProject(update, context):
         context.bot.send_message(chat_id=update.effective_chat.id, text="Failed to create new project: {projectName}")
 
 
-def canManage(userName):
+def canManage(username):
     try:
         db = get_db()
         cursor = db.cursor()
-        getUserRights = "SELECT canManage from chatids WHERE user=%s"
-        cursor.execute(getUserRights, (userName,))
-        canManage = cursor.fetchone()
-        return canManage[0] > 0
+        get_user_rights = "SELECT canManage from chatids WHERE user=%s"
+        cursor.execute(get_user_rights, (username,))
+        can_manage = cursor.fetchone()
+        return can_manage[0] > 0
     except Exception as e:
         print(e)
         return False
 
 
-def projectExists(projectName):
+def projectExists(project_name):
     try:
         db = get_db()
         cursor = db.cursor()
         sqlcmd = "SELECT * FROM projects WHERE name = %s"
-        cursor.execute(sqlcmd, (projectName,))
+        cursor.execute(sqlcmd, (project_name,))
         projects = cursor.fetchall()
         return len(projects) > 0
     except Exception as e:
@@ -110,15 +110,15 @@ def projectExists(projectName):
 
 
 def listProjects(update, context):
-    currentProjects = cursorListToString(get_project_list())
-    if currentProjects is None:
+    current_projects = cursorListToString(get_project_list())
+    if current_projects is None:
         context.bot.send_message(chat_id=update.effective_chat.id, text="No projects found!")
     else:
-        context.bot.send_message(chat_id=update.effective_chat.id, text="Current projects: {}".format(currentProjects))
+        context.bot.send_message(chat_id=update.effective_chat.id, text="Current projects: {}".format(current_projects))
 
 
-def cursorListToString(itemList):
-    return ', '.join(str(item) for cursorList in itemList for item in cursorList)
+def cursorListToString(item_list):
+    return ', '.join(str(item) for cursor_list in item_list for item in cursor_list)
 
 
 def start(update, context):
@@ -138,6 +138,7 @@ def start(update, context):
 
 
 def project(update, context):
+    print('test')
     username = update.message.chat.username
     args = update.message.text.split()
     if username is not None:
@@ -155,11 +156,11 @@ def project(update, context):
         if (projectExists(project_name) is False):
             project_list = cursorListToString(get_project_list())
             context.bot.send_message(chat_id=update.effective_chat.id,
-                                     text=("Project {} does not exists!" + "\n" + "Available projects: {}").format(
+                                     text=("Project {} does not exist!" + "\n" + "Available projects: {}").format(
                                          project_name, project_list))
             return
-        if session[4] == None:
-            session[4] = project_name
+        if session[3] == None:
+            session[3] = project_name
             updateRunningSession(session)
             context.bot.send_message(chat_id=update.effective_chat.id, text="Project set to {}!".format(project_name))
         else:

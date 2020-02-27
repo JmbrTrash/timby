@@ -19,16 +19,10 @@ bot = telegram.Bot(token=API_TOKEN)
 @api.route('/report', methods=['GET'])
 def report():
     user = request.args.get('user')
-
     session = getRunningSession(user)
-    saved_session_type = session[5]
-    chat_id = get_chat_id(user)
-
-    project = session[3]
-    current_time = int(time())
-    session[1] = current_time
-    total_time = "just now"
     session_type = "Unknown"
+    total_time = "just now"
+    chat_id = get_chat_id(user)
 
     if "192.168.2." in str(request.remote_addr):
         session_type = "Local"
@@ -39,7 +33,13 @@ def report():
 
     if session is None:
         startNewSession(user, None, session_type)
-    elif saved_session_type != session_type:
+
+    saved_session_type = session[5]
+    project = session[3]
+    current_time = int(time())
+    session[1] = current_time
+
+    if saved_session_type != session_type:
         updateRunningSession(session)
         startNewSession(user, project, session_type)
         if chat_id is not None:
@@ -72,12 +72,6 @@ def get_project_list():
     except Exception as e:
         print(e)
         return None
-
-
-@api.before_request
-def before_request():
-    print("BEFORE !!!! ")
-    # init()
 
 
 def get_chat_id(user):
