@@ -15,11 +15,6 @@ module.exports = {
         { text: 'Week', value: 'week'},
         { text: 'Time worked', value: 'time'}
       ],
-      headersEntries: [ 
-        { text: 'Project', value: 'project'},
-        { text: 'Start', value: 'start'},
-        { text: 'Time worked', value: 'time'}
-      ],
       time_entries: undefined
     }
   },

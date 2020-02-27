@@ -28,6 +28,7 @@
               :items-per-page="20"
               class="elevation-1"
               hide-default-footer
+              must-sort
             >
               <template v-slot:item.time="{ item }">
                 <span>{{ item.time | convertTime }}</span>
