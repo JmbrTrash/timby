@@ -8,7 +8,7 @@ def updateRunningSession(session):
     try:
         db = get_db()
         c = db.cursor()
-        sqlcmd = "UPDATE time_entries SET begintime=%s, lasttime=%s, user=%s, project=%s where ID=%s"
+        sqlcmd = "UPDATE time_entries SET begintime=%s, lasttime=%s, totaltime=%s, project=%s where ID=%s"
         c.execute(sqlcmd, (session[0], session[1], session[2], session[3], session[4]))
     except Exception as e:
         print(e)
@@ -19,7 +19,7 @@ def getRunningSession(user):
         db = get_db()
         c = db.cursor()
         limit = time() - TIME_LIMIT
-        c.execute("SELECT begintime, lasttime, user, project, ID, type FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user, limit))
+        c.execute("SELECT begintime, lasttime, totaltime, project, ID, type FROM time_entries WHERE user=%s and lasttime > %s order by lasttime desc", (user, limit))
         session = c.fetchone()
         session_arr = []
         if session is None:

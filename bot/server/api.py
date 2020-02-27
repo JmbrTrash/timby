@@ -21,7 +21,6 @@ def report():
     user = request.args.get('user')
     session = getRunningSession(user)
     session_type = "Unknown"
-    total_time = "just now"
     chat_id = get_chat_id(user)
 
     if "192.168.2." in str(request.remote_addr):
@@ -33,30 +32,33 @@ def report():
 
     if session is None:
         startNewSession(user, None, session_type)
+        return "{} just started a new session!".format(user)
 
     saved_session_type = session[5]
     project = session[3]
+
     current_time = int(time())
     session[1] = current_time
 
+    saved_time = int(session[0])
+    total_seconds = (current_time - saved_time)
+    session[2] = total_seconds
+    updateRunningSession(session)
+
     if saved_session_type != session_type:
-        updateRunningSession(session)
         startNewSession(user, project, session_type)
         if chat_id is not None:
             bot.send_message(chat_id=chat_id,
                             text="You started a new session, connection changed to {}".format(session_type))
     else:
-        saved_time = int(session[0])
-        total_seconds = (current_time - saved_time)
-        hours = int(total_seconds / 3600)
-        minutes = int((total_seconds / 60) % 60)
-        total_time = '{} hours and {} minutes'.format(hours, minutes)
         if project is None:
             if chat_id is not None:
                 bot.send_message(chat_id=chat_id,
                                  text="You are working without active project, please set project using /project { projectname }")
 
-        updateRunningSession(session)
+    hours = int(total_seconds / 3600)
+    minutes = int((total_seconds / 60) % 60)
+    total_time = '{} hours and {} minutes'.format(hours, minutes)
 
     return "User {} is having an active session on {}, {}".format(user, project, total_time)
 

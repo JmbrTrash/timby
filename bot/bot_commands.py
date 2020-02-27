@@ -138,7 +138,6 @@ def start(update, context):
 
 
 def project(update, context):
-    print('test')
     username = update.message.chat.username
     args = update.message.text.split()
     if username is not None:
